@@ -1,0 +1,16 @@
+ADDI $8    ,$0,1
+ROTR $9,$8,28 # rotation de 28 à droite 
+ROTR $10,$8,62 # rotation de 62 à droite <=> rotation de 30 à droite
+ROTR $10,$10,2 # rotation de 2 à droite, $10 doit maintenant avoir la même valeur que $8
+ROTR $11,$8,-8 # offset négatif <=> rotation à gauche
+SLL $12,$8,6 # décalage à gauche de 6
+SLL $13,$8,32 # décalage à gauche de 32
+SLL $14,$8,39 # décalage à gauche de 39 <=> décalage à gauche de 7
+SRL $12,$12,5 # décalage à droite de 5
+SRL $15,$8,1 # décalage à droite de 1
+
+# *** Final register states: *** 
+# ...
+# $08: 1         $09: 16        $10: 1         $11: 256       
+# $12: 2        $13: 1         $14: 128       $15: 0    
+# ...

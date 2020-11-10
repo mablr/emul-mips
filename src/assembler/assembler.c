@@ -97,17 +97,21 @@ int extractArgs(char * line, int indexToBegin, int arguments[]){
     for(index = indexToBegin; line[index] != '\n' && index < BUFFER_SIZE && !errorFlag; index++){
         if((isdigit(line[index]) || line[index] == '-') && !beginArg){ /* À modifier pour gérer les étiquettes */
             beginArg = index;
-        }else if((line[index] == ',' || line[index] == '$') && beginArg){
+        }else if((line[index] == ',' || line[index] == '(' || line[index] == ')') && beginArg){
             arguments[argIndex] = str2int(line, beginArg, index);
             beginArg = 0; 
             argIndex++;
-        }else if(!(isdigit(line[index]) || line[index] == '-' || line[index] == ',' || line[index] == '$')){
+        }else if(!(isdigit(line[index]) || line[index] == '-' || line[index] == ',' || line[index] == '$' || line[index] == '(' || line[index] == ')')){
             errorFlag = 1;
         }
     }
-    if(indexToBegin != index && !errorFlag && isalnum(line[index-1])){
-        arguments[argIndex] = str2int(line, beginArg, index);
-        nbArgsFound = argIndex + 1;
+    if(indexToBegin != index && !errorFlag){
+        if(isalnum(line[index-1])){
+            arguments[argIndex] = str2int(line, beginArg, index);
+            nbArgsFound = argIndex + 1;
+        }else{
+            nbArgsFound = argIndex;
+        }
     }else{
         nbArgsFound = 0;
     }

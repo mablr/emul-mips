@@ -1,8 +1,35 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
 #include "assembler.h"
 
+instruction instructions[] = {{"ADD",  'R', 0x00, 0x20},
+                              {"ADDI", 'I', 0x08},
+                              {"AND",  'R', 0x00, 0x24},
+                              {"BEQ",  'I', 0x04},
+                              {"BGTZ", 'I', 0x07},
+                              {"BLEZ", 'I', 0x06},
+                              {"BNE",  'I', 0x05},
+                              {"DIV",  'R', 0x00, 0x1A},
+                              {"J",    'J', 0x02},
+                              {"JAL",  'J', 0x03},
+                              {"JR",   'R', 0x00, 0x08},
+                              {"LUI",  'I', 0x0F},
+                              {"LW",   'I', 0x23},
+                              {"MFHI", 'R', 0x00, 0x10},
+                              {"MFLO", 'R', 0x00, 0x12},
+                              {"MULT", 'R', 0x00, 0x18},
+                              {"NOP",  '0', 0x00, 0x00},
+                              {"OR",   'R', 0x00, 0x25},
+                              {"ROTR", 'R', 0x00, 0x02},
+                              {"SLL",  'R', 0x00, 0x00},
+                              {"SLT",  'R', 0x00, 0x2A},
+                              {"SRL",  'R', 0x00, 0x02},
+                              {"SUB",  'R', 0x00, 0x22},
+                              {"SW",   'I', 0x2B},
+                              {"XOR",  'R', 0x00, 0x26}
+                            };
 
 FILE * openFile(char * fileName, char * mode){
     FILE * file = fopen(fileName, mode);
@@ -69,25 +96,27 @@ int purifyLine(char * line){
 }
 
 unsigned int translateAsm(char * line){
-    char instruction[MAX_INSTRUCTION_SIZE];
     int arguments[MAX_ARGS], index, nbArgs = 0, nextCharIndex;
-
-    nextCharIndex = extractInstruction(line, instruction);
+    char * opcode = (char *) malloc(MAX_OPCODE_SIZE*sizeof(char));
+    if(opcode == NULL)
+        exit(EXIT_FAILURE);
+    nextCharIndex = extractOpcode(line, opcode);
     nbArgs = extractArgs(line, nextCharIndex, arguments);
 
     /* Testing */
+    printf("> %s ", opcode);
     for(index = 0; index < nbArgs; index++)
         printf(" %d ", arguments[index]);
 
-    printf("\n");
+    printf(", nbArgs: %d\n", nbArgs);
     /**/
-    return getBinSegment(instruction, arguments, nbArgs);
+    return getBinSegment(opcode, arguments, nbArgs);
 }
 
-int extractInstruction(char * line, char * instruction){
+int extractOpcode(char * line, char * opcode){
     int index;
-    for(index = 0; isalpha(line[index]) && index < MAX_INSTRUCTION_SIZE; index++){
-        instruction[index] = line[index];
+    for(index = 0; isalpha(line[index]) && index < MAX_OPCODE_SIZE; index++){
+        opcode[index] = line[index];
     }
     return index;
 }
@@ -132,6 +161,26 @@ int str2int(char * str, int beginChar, int endChar){
     return sign*value;
 }
 
-unsigned int getBinSegment(char * instruction, int arguments[], int nbArgs){
-    
+unsigned int getBinSegment(char * opcode, int arguments[], int nbArgs){
+    unsigned int segment = 0;
+    int index,instructionIndex=-1;
+    for(index=0;index<sizeof(instructions)/sizeof(instruction); index++){
+        if(!strcmp(instructions[index].name, opcode)){
+            instructionIndex = index;
+        }
+    }
+    if(instructionIndex != -1){
+        /* OPCODE */
+        segment += (instructions[instructionIndex].opcode << OPCODE_SHIFT) & OPCODE_MASK;
+        if(instructions[instructionIndex].type == 'R'){
+            /* FUNCTION */
+            segment += instructions[instructionIndex].function & FCT_MASK;
+            /* RS */
+            segment += instructions[instructionIndex].function & FCT_MASK;
+            printf("NAME: %s, TYPE: %c, OPCODE : 0x%06x, FUNCTION : 0x%06x\n", instructions[instructionIndex].name, instructions[instructionIndex].type, instructions[instructionIndex].opcode, instructions[instructionIndex].function);
+        }else{
+            printf("NAME: %s, TYPE: %c, OPCODE : 0x%06x\n", instructions[instructionIndex].name, instructions[instructionIndex].type, instructions[instructionIndex].opcode);
+        }
+    }
+    return segment;
 }

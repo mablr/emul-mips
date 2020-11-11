@@ -6,26 +6,47 @@
 #define MAX_ARGS 3
 
 #define OPCODE_MASK     0xFC000000
+#define INDEX_MASK      0x03FFFFFF
+#define BASE_MASK       0x03E00000
 #define RS_MASK         0x03E00000
+#define ROTATE_MASK     0x00200000
 #define RT_MASK         0x001F0000
-#define RD_MASK         0x0000F800
-#define SA_MASK         0x000007C0
-#define FCT_MASK        0x0000003F
 #define OFFSET_MASK     0x0000FFFF
 #define IMMEDIATE_MASK  0x0000FFFF
-#define ROTATE_MASK     0x00200000
+#define RD_MASK         0x0000F800
+#define SA_MASK         0x000007C0
+#define HINT_MASK       0x000007C0
+#define FCT_MASK        0x0000003F
 
-#define OPCODE_SHIFT 25
-#define RS_SHIFT 21
-#define RT_SHIFT 16
-#define RD_SHIFT 11
-#define SA_SHIFT 6
+#define OPCODE_SHIFT    26
+#define INDEX_SHIFT     0
+#define BASE_SHIFT      21
+#define RS_SHIFT        21
+#define ROTATE_SHIFT    21
+#define RT_SHIFT        16
+#define OFFSET_SHIFT    0
+#define IMMEDIATE_SHIFT 0
+#define RD_SHIFT        11
+#define SA_SHIFT        6
+#define HINT_SHIFT      6
+#define FCT_SHIFT       0
 
+#define INDEX_FIELD     1024
+#define BASE_FIELD      512
+#define RS_FIELD        256
+#define ROTATE_FIELD    128
+#define RT_FIELD        64
+#define OFFSET_FIELD    32
+#define IMMEDIATE_FIELD 16
+#define RD_FIELD        8
+#define SA_FIELD        4
+#define HINT_FIELD      2
+#define FCT_FIELD       1
 
 typedef struct instruction instruction;
 struct instruction{
     char name[MAX_OPCODE_SIZE+1];
-    char type;
+    unsigned int type;
     unsigned int opcode;
     unsigned int function;
 };
@@ -38,5 +59,5 @@ unsigned int translateAsm(char * line);
 int extractOpcode(char * line, char * opcode);
 int extractArgs(char * line, int indexToBegin, int arguments[]);
 int str2int(char * str, int beginChar, int endChar);
-unsigned int getBinSegment(char * opcode, int arguments[], int nbArgs);
+unsigned int getBinSegment(char * opcode, int arguments[]);
 #endif

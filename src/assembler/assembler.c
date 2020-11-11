@@ -4,31 +4,31 @@
 #include <string.h>
 #include "assembler.h"
 
-instruction instructions[] = {{"ADD",  'R', 0x00, 0x20},
-                              {"ADDI", 'I', 0x08},
-                              {"AND",  'R', 0x00, 0x24},
-                              {"BEQ",  'I', 0x04},
-                              {"BGTZ", 'I', 0x07},
-                              {"BLEZ", 'I', 0x06},
-                              {"BNE",  'I', 0x05},
-                              {"DIV",  'R', 0x00, 0x1A},
-                              {"J",    'J', 0x02},
-                              {"JAL",  'J', 0x03},
-                              {"JR",   'R', 0x00, 0x08},
-                              {"LUI",  'I', 0x0F},
-                              {"LW",   'I', 0x23},
-                              {"MFHI", 'R', 0x00, 0x10},
-                              {"MFLO", 'R', 0x00, 0x12},
-                              {"MULT", 'R', 0x00, 0x18},
-                              {"NOP",  '0', 0x00, 0x00},
-                              {"OR",   'R', 0x00, 0x25},
-                              {"ROTR", 'R', 0x00, 0x02},
-                              {"SLL",  'R', 0x00, 0x00},
-                              {"SLT",  'R', 0x00, 0x2A},
-                              {"SRL",  'R', 0x00, 0x02},
-                              {"SUB",  'R', 0x00, 0x22},
-                              {"SW",   'I', 0x2B},
-                              {"XOR",  'R', 0x00, 0x26}
+instruction instructions[] = {{"ADD",  0x149, 0x00, 0x20},
+                              {"ADDI", 0x150, 0x08},
+                              {"AND",  0x149, 0x00, 0x24},
+                              {"BEQ",  0x160, 0x04},
+                              {"BGTZ", 0x120, 0x07},
+                              {"BLEZ", 0x120, 0x06},
+                              {"BNE",  0x160, 0x05},
+                              {"DIV",  0x141, 0x00, 0x1A},
+                              {"J",    0x400, 0x02},
+                              {"JAL",  0x400, 0x03},
+                              {"JR",   0x103, 0x00, 0x08},
+                              {"LUI",  0x050, 0x0F},
+                              {"LW",   0x260, 0x23},
+                              {"MFHI", 0x009, 0x00, 0x10},
+                              {"MFLO", 0x009, 0x00, 0x12},
+                              {"MULT", 0x141, 0x00, 0x18},
+                              {"NOP",  0x000, 0x00, 0x00},
+                              {"OR",   0x149, 0x00, 0x25},
+                              {"ROTR", 0x0CD, 0x00, 0x02},
+                              {"SLL",  0x04D, 0x00, 0x00},
+                              {"SLT",  0x149, 0x00, 0x2A},
+                              {"SRL",  0x04D, 0x00, 0x02},
+                              {"SUB",  0x149, 0x00, 0x22},
+                              {"SW",   0x260, 0x2B},
+                              {"XOR",  0x149, 0x00, 0x26}
                             };
 
 FILE * openFile(char * fileName, char * mode){
@@ -110,7 +110,7 @@ unsigned int translateAsm(char * line){
 
     printf(", nbArgs: %d\n", nbArgs);
     /**/
-    return getBinSegment(opcode, arguments, nbArgs);
+    return getBinSegment(opcode, arguments);
 }
 
 int extractOpcode(char * line, char * opcode){
@@ -161,7 +161,7 @@ int str2int(char * str, int beginChar, int endChar){
     return sign*value;
 }
 
-unsigned int getBinSegment(char * opcode, int arguments[], int nbArgs){
+unsigned int getBinSegment(char * opcode, int arguments[]){
     unsigned int segment = 0;
     int index,instructionIndex=-1;
     for(index=0;index<sizeof(instructions)/sizeof(instruction); index++){
@@ -170,17 +170,98 @@ unsigned int getBinSegment(char * opcode, int arguments[], int nbArgs){
         }
     }
     if(instructionIndex != -1){
+        /* L'application d'un tableau de karnaugh pourrait éventuellement factoriser 
+         * certaines conditions au détriment de la lisibilité du code .
+         */
         /* OPCODE */
         segment += (instructions[instructionIndex].opcode << OPCODE_SHIFT) & OPCODE_MASK;
-        if(instructions[instructionIndex].type == 'R'){
+        if(instructions[instructionIndex].type & FCT_FIELD){
             /* FUNCTION */
             segment += instructions[instructionIndex].function & FCT_MASK;
-            /* RS */
-            segment += instructions[instructionIndex].function & FCT_MASK;
-            printf("NAME: %s, TYPE: %c, OPCODE : 0x%06x, FUNCTION : 0x%06x\n", instructions[instructionIndex].name, instructions[instructionIndex].type, instructions[instructionIndex].opcode, instructions[instructionIndex].function);
-        }else{
-            printf("NAME: %s, TYPE: %c, OPCODE : 0x%06x\n", instructions[instructionIndex].name, instructions[instructionIndex].type, instructions[instructionIndex].opcode);
         }
+        if( !(instructions[instructionIndex].type ^ (RS_FIELD|RT_FIELD|RD_FIELD|FCT_FIELD)) ){
+            /* ADD,AND,OR,SLT,SUB,XOR */
+            /* RS */
+            segment += (arguments[1] << RS_SHIFT) & RS_MASK;
+            /* RT */
+            segment += (arguments[2] << RT_SHIFT) & RT_MASK;
+            /* RD */
+            segment += (arguments[0] << RD_SHIFT) & RD_MASK;
+        }else if( !(instructions[instructionIndex].type ^ (RS_FIELD|RT_FIELD|OFFSET_FIELD)) ){
+            /* BEQ,BNE */
+            /* RS */
+            segment += (arguments[0] << RS_SHIFT) & RS_MASK;
+            /* RT */
+            segment += (arguments[1] << RT_SHIFT) & RT_MASK;
+            /* OFFSET */
+            segment += (arguments[2] << OFFSET_SHIFT) & OFFSET_MASK;
+        }else if( !(instructions[instructionIndex].type ^ (RS_FIELD|OFFSET_FIELD)) ){
+            /* BGTZ, BLEZ */
+            /* RS */
+            segment += (arguments[0] << RS_SHIFT) & RS_MASK;
+            /* OFFSET */
+            segment += (arguments[1] << OFFSET_SHIFT) & OFFSET_MASK;
+        }else if( !(instructions[instructionIndex].type ^ (RS_FIELD|RT_FIELD|FCT_FIELD)) ){
+            /* DIV,MUL */
+            /* RS */
+            segment += (arguments[0] << RS_SHIFT) & RS_MASK;
+            /* RT */
+            segment += (arguments[1] << RT_SHIFT) & RT_MASK;
+        }else if( !(instructions[instructionIndex].type ^ (RS_FIELD|RT_FIELD|IMMEDIATE_FIELD)) ){
+            /* ADDI */
+            /* RT */
+            segment += (arguments[0] << RT_SHIFT) & RT_MASK;
+            /* RS */
+            segment += (arguments[1] << RS_SHIFT) & RS_MASK;
+            /* IMMEDIATE */
+            segment += (arguments[2] << IMMEDIATE_SHIFT) & IMMEDIATE_MASK;
+        }else if( !(instructions[instructionIndex].type ^ (RT_FIELD|IMMEDIATE_FIELD)) ){
+            /* LUI */
+            /* RT */
+            segment += (arguments[0] << RT_SHIFT) & RT_MASK;
+            /* IMMEDIATE */
+            segment += (arguments[1] << IMMEDIATE_SHIFT) & IMMEDIATE_MASK;
+        }else if( !(instructions[instructionIndex].type ^ (BASE_FIELD|RT_FIELD|OFFSET_FIELD)) ){
+            /* LW,SW */
+            /* BASE */
+            segment += (arguments[2] << BASE_SHIFT) & BASE_MASK;
+            /* RT */
+            segment += (arguments[0] << RT_SHIFT) & RT_MASK;
+            /* OFFSET */
+            segment += (arguments[1] << OFFSET_SHIFT) & OFFSET_MASK;
+        }else if( !(instructions[instructionIndex].type ^ (RD_FIELD|FCT_FIELD)) ){
+            /* MFHI,MFLO */
+            /* RD */
+            segment += (arguments[0] << RD_SHIFT) & RD_MASK;
+        }else if( !(instructions[instructionIndex].type ^ INDEX_FIELD) ){
+            /* J,JAL */
+            /* INDEX */
+            segment += (arguments[0] << INDEX_SHIFT) & INDEX_MASK;
+        }else if( !(instructions[instructionIndex].type ^ (RS_FIELD|HINT_FIELD|FCT_FIELD)) ){
+            /* JR */
+            /* RS */
+            segment += (arguments[0] << RS_SHIFT) & RS_MASK;
+            /* HINT : assuming we use MIPS I version, thus HINT = 0*/
+        }else if( !(instructions[instructionIndex].type ^ (RT_FIELD|RD_FIELD|SA_FIELD|FCT_FIELD)) ){
+            /* SLL,SRL */
+            /* RT */
+            segment += (arguments[1] << RT_SHIFT) & RT_MASK;
+            /* RD */
+            segment += (arguments[0] << RD_SHIFT) & RD_MASK;
+            /* SA */
+            segment += (arguments[2] << SA_SHIFT) & SA_MASK;
+        }else if( !(instructions[instructionIndex].type ^ (ROTATE_FIELD|RT_FIELD|RD_FIELD|SA_FIELD|FCT_FIELD)) ){
+            /* ROTR */
+            /* R Flag */
+            segment |= ROTATE_MASK;
+            /* RT */
+            segment += (arguments[1] << RT_SHIFT) & RT_MASK;
+            /* RD */
+            segment += (arguments[0] << RD_SHIFT) & RD_MASK;
+            /* SA */
+            segment += (arguments[2] << SA_SHIFT) & SA_MASK;
+        }
+        printf("SEG: 0x%08x\n", segment);
     }
     return segment;
 }

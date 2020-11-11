@@ -43,6 +43,11 @@
 #define HINT_FIELD      2
 #define FCT_FIELD       1
 
+/*
+ * Le champ type de la structure indique comment doit être encodée
+ * l'instruction. La valeur est obtenue par un ET bit à bit des 
+ * valeurs de "XXX_FIELD" définis ci-dessus.
+ */
 typedef struct instruction instruction;
 struct instruction{
     char name[MAX_OPCODE_SIZE+1];
@@ -59,5 +64,8 @@ unsigned int translateAsm(char * line);
 int extractOpcode(char * line, char * opcode);
 int extractArgs(char * line, int indexToBegin, int arguments[]);
 int str2int(char * str, int beginChar, int endChar);
-unsigned int getBinSegment(char * opcode, int arguments[]);
+int searchInstruction(char * opcode);
+int validateArgs(int instructionRank, int arguments[], int nbArgs);
+unsigned int getBinSegment(int instructionRank, int arguments[]);
+
 #endif

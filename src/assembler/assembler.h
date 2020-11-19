@@ -57,8 +57,6 @@ struct instruction{
 };
 
 void asm2hex(char * inputFileName, char * outputFileName);
-FILE * openFile(char * fileName, char * mode);
-void closeFile(char * fileName, FILE * file);
 int purifyLine(char * line);
 unsigned int translateAsm(char * line);
 int extractOpcode(char * line, char * opcode);

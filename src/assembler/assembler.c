@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include <string.h>
 #include "assembler.h"
+#include "../stream/stream.h"
 
 /* Instructions MIPS prises en charge par l'assembleur */
 instruction instructions[] = {{"ADD",  0x149, 0x00, 0x20},
@@ -31,24 +32,6 @@ instruction instructions[] = {{"ADD",  0x149, 0x00, 0x20},
                               {"SW",   0x260, 0x2B},
                               {"XOR",  0x149, 0x00, 0x26}
                             };
-
-/* Ouverture sécurisée de fichiers */ 
-FILE * openFile(char * fileName, char * mode){
-    FILE * file = fopen(fileName, mode);
-    if(file == NULL){
-        fprintf(stderr,"Unable to open %s\n", fileName);
-        exit(EXIT_FAILURE);
-    }
-    return file;
-}
-
-/* Fermeture sécurisée de fichiers */ 
-void closeFile(char * fileName, FILE * file){
-    if(fclose(file) ==  EOF){
-        fprintf(stderr,"Unable to close %s\n", fileName);
-        exit(EXIT_FAILURE);
-    }
-}
 
 void asm2hex(char * inputFileName, char * outputFileName){
     FILE * asmFile, * hexFile;

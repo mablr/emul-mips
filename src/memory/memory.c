@@ -2,76 +2,74 @@
 #include <stdlib.h>
 #include "memory.h"
 
-void insertByteMem(unsigned int address, unsigned char data, memory * mem){
+void insertWord(unsigned int address, int data, memory * mem){
     int elemStored = 0;
-    byteMem *prevElem = *mem, *curElem = *mem;
-    byteMem *elem = (byteMem *) malloc(sizeof(byteMem));
-    
+    wordMem *prevElem, *curElem = *mem;
+    wordMem *elem = (wordMem *) malloc(sizeof(wordMem));
     /* Vérification malloc */
     if(elem == NULL)
         exit(EXIT_FAILURE);
-
-    /* Si la liste est vide */
-    if(*mem == NULL){
-        *mem = elem;
-        elem->next = NULL;
-    }
-    /* Sinon si la valeur de l'élément à ajouter est 
-     * inférieure à la valeur du 1er élément de la liste.
-     * ==> Insertion en tête <==
-     */
-    else if(address <= (*mem)->address){
-        *mem = elem;
-        elem->next = curElem;
-    }
-    /* Sinon détermination insertion en milieu ou queue
-     * de liste.
-     */
-    else{
-        /* Tant que la fin de la liste n'est pas atteinte ou
-         * que l'élément n'est pas déjà inséré dans la liste.
-         */
-        while(curElem != NULL && !elemStored){
-            /* Si la valeur de l'élément à insérer est inférieure
-             * à la valeur de l'élément courant.
-             * ==> Insertion en tête <==
-             */
-            if(address <= curElem->address){
-                prevElem->next = elem;
-                elem->next = curElem;
-                elemStored = 1;
-            /* Sinon, avancer dans la memory */
-            }else{
-                prevElem = curElem;
-                curElem = curElem->next;
-            }
-        }
-        /* Si la fin de la liste a été atteinte et l'élément
-         * n'a pas été inséré.
-         * ==> Insertion en queue <== 
-         */
-        if(!elemStored){
-            prevElem->next = elem;
-            elem->next = NULL;
-        }
-    }
     /* Affectation de la valeur de l'élément inséré */
     elem->address = address;
     elem->data = data;
-
+    /* Si l'adresse du mot est correcte */
+    if(address % 4 == 0 && address < MEM0RY_SIZE){
+        /* Si la liste est vide */
+        if(*mem == NULL){
+            *mem = elem;
+            elem->next = NULL;
+        }
+        /* Sinon si la valeur de l'adresse de l'élément à ajouter est 
+        * inférieure à la valeur de l'adresse du 1er élément de la liste.
+        * ==> Insertion en tête <==
+        */
+        else if(address < (*mem)->address){
+            *mem = elem;
+            elem->next = curElem;
+        }
+        /* Sinon détermination insertion en milieu ou queue
+        * de liste.
+        */
+        else{
+            /* Tant que la fin de la liste n'est pas atteinte ou
+            * que l'élément n'est pas déjà inséré dans la liste.
+            */
+            while(curElem != NULL && !elemStored){
+                /* Si la valeur de l'adresse de l'elem à insérer est inférieure
+                * à la valeur de l'adresse de l'élément courant.
+                * ==> Insertion en tête <==
+                */
+                if(address < curElem->address){
+                    prevElem->next = elem;
+                    elem->next = curElem;
+                    elemStored = 1;
+                /* Sinon si l'élément existe déjà (optimisation possible) */
+                }else if(address == curElem->address){
+                    /* libération du nouvel elem inutile + remplacement données */
+                    curElem->data = data;
+                    free(elem);
+                    elemStored = 1;
+                /* Sinon, avancer dans la memoire */
+                }else{
+                    prevElem = curElem;
+                    curElem = curElem->next;
+                }
+            }
+            /* Si la fin de la liste a été atteinte et l'élément
+            * n'a pas été inséré.
+            * ==> Insertion en queue <== 
+            */
+            if(!elemStored){
+                prevElem->next = elem;
+                elem->next = NULL;
+            }
+        }
+    }
 }
 
-void insertWord(unsigned int address, unsigned int data, memory * mem){
-    /* Ajout d'un mot en mémoire en big endian */
-    insertByteMem(address, data & 0xFF000000, mem);
-    insertByteMem(address + 1, data & 0xFF0000, mem);
-    insertByteMem(address + 2, data & 0xFF00, mem);
-    insertByteMem(address + 3, data & 0xFF, mem);
-}
-
-unsigned char getByteMem(unsigned int address, memory * mem){
-    unsigned char data = 0, byteFound = 0;
-    byteMem *elem = *mem;
+int getWord(unsigned int address, memory * mem){
+    int data = 0, byteFound = 0;
+    wordMem *elem = *mem;
     /* Tant que la liste n'est pas terminée ou que l'emplacement 
      * mémoire à l'adresse donnée n'est pas trouvé
      */
@@ -87,21 +85,36 @@ unsigned char getByteMem(unsigned int address, memory * mem){
     return data;
 }
 
-unsigned int getWord(unsigned int address, memory * mem){
-    unsigned int word = 0;
-    word += getByteMem(address, mem) << 24;
-    word += getByteMem(address+1, mem) << 16;
-    word += getByteMem(address+2, mem) << 8;
-    word += getByteMem(address+3, mem);
-    return word;
+
+void deleteWord(unsigned int address, memory * mem){
+    int delFlag = 0;
+    wordMem *prevElem, *curElem = *mem;
+    /* Si la liste n'est pas vide */
+    if(curElem != NULL){
+        /* Suppresion du premier élément */
+        if(curElem->address == address){
+            *mem = curElem->next;
+            free(curElem); /* Libération mémoire */ 
+        }else{
+            /* Parcourir liste ... */
+            while(curElem != NULL && !delFlag){
+                prevElem = curElem;
+                curElem = curElem->next;
+                if(curElem->address == address){
+                    delFlag = 1;
+                }
+            }
+            if(delFlag){
+                prevElem->next = curElem->next;
+                free(curElem); /* Libération mémoire */
+            }
+        }
+    }
 }
 
-void deleteByteMem(unsigned int address, memory * mem){
-}
-
-int isAllocatedByteMem(unsigned int address, memory * mem){
+int isAllocatedWord(unsigned int address, memory * mem){
     int byteFound = 0;
-    byteMem *elem = *mem;
+    wordMem *elem = *mem;
     /* Tant que la liste n'est pas terminée ou que l'emplacement 
      * mémoire à l'adresse donnée n'est pas trouvé
      */
@@ -119,10 +132,10 @@ void showMemory(memory * mem){
     int index;
     /* Création d'un pointeur local pour ne pas modifier *mem */
     for(index = 0; index < NB_BLOCKS_TO_PRINT*4; index+=4){
-        if(isAllocatedByteMem(index, mem)){
-            printf("@0x%08x : %d\n", index, getWord(index, mem));
+        if(isAllocatedWord(index, mem)){
+            printf("@%08x : %d\n", index, getWord(index, mem));
         }else{
-            printf("@0x%08x : 0\n", index);
+            printf("@%08x : 0\n", index);
         }
     }
 }
@@ -135,7 +148,7 @@ void showAllocatedSectors(memory * mem){
     }else{
         while(memPointer != NULL){
             /* Affichage de la valeur */
-            printf("@%d : 0x%02x\n", memPointer->address, memPointer->data);
+            printf("@%08x : 0x%02x\n", memPointer->address, memPointer->data);
             /* Passage à l'élément suivant */
             memPointer = memPointer->next;
         }

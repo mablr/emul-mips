@@ -4,6 +4,7 @@
 #include <string.h>
 #include "assembler.h"
 #include "../stream/stream.h"
+#include "../memory/memory.h"
 
 /* Instructions MIPS prises en charge par l'assembleur */
 instruction instructions[] = {{"ADD",  0x149, 0x00, 0x20},
@@ -33,9 +34,9 @@ instruction instructions[] = {{"ADD",  0x149, 0x00, 0x20},
                               {"XOR",  0x149, 0x00, 0x26}
                             };
 
-void asm2hex(char * inputFileName, char * outputFileName){
-    FILE * asmFile, * hexFile;
-    int arguments[MAX_ARGS], nbArgs = 0, nextCharIndex, instructionIndex;
+int loadAsmFile(char * inputFileName, memory * mem){
+    FILE * asmFile;
+    int arguments[MAX_ARGS], nbArgs = 0, nextCharIndex, instructionIndex, lineIndex = FIRST_INSTRUCTION_BLOCK;
     unsigned int hexCode = 0;
 
     /* Allocations mémoire */
@@ -48,7 +49,6 @@ void asm2hex(char * inputFileName, char * outputFileName){
     
     /* Ouverture des fichier E/S */
     asmFile = openFile(inputFileName, "r");
-    hexFile = openFile(outputFileName, "w");
     
     /* Lecture ligne par ligne du fichier d'entrée */
     while(fgets(lineBuffer, BUFFER_SIZE, asmFile) != NULL){
@@ -62,9 +62,10 @@ void asm2hex(char * inputFileName, char * outputFileName){
             instructionIndex = searchInstruction(opcode);
             /* Si l'instruction est supportée et que le nombre d'arguments est bon */
             if(instructionIndex != -1 && validateArgs(instructionIndex, arguments, nbArgs)){
-                /* Encodage hexadécimal et écriture dans le fichier de sortie */
+                /* Encodage hexadécimal et écriture dans la mémoire */
                 hexCode = getBinSegment(instructionIndex, arguments);
-                fprintf(hexFile, "%08x\n", hexCode);
+                insertWord(lineIndex, hexCode, mem);
+                lineIndex+=4;
             }
         }
     }
@@ -72,7 +73,7 @@ void asm2hex(char * inputFileName, char * outputFileName){
     free(opcode);
     free(lineBuffer);
     closeFile(inputFileName, asmFile);
-    closeFile(outputFileName, hexFile);
+    return lineIndex;
 }
 
 int purifyLine(char * line){

@@ -1,5 +1,6 @@
 #ifndef ASSEMBLER_H
 #define ASSEMBLER_H
+#include "../memory/memory.h"
 
 #define BUFFER_SIZE 100
 #define MAX_OPCODE_SIZE 4
@@ -56,7 +57,7 @@ struct instruction{
     unsigned int function;
 };
 
-void asm2hex(char * inputFileName, char * outputFileName);
+int loadAsmFile(char * inputFileName, memory * mem);
 int purifyLine(char * line);
 unsigned int translateAsm(char * line);
 int extractOpcode(char * line, char * opcode);

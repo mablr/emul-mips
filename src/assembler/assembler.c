@@ -34,46 +34,32 @@ instruction instructions[] = {{"ADD",  0x149, 0x00, 0x20},
                               {"XOR",  0x149, 0x00, 0x26}
                             };
 
-int loadAsmFile(char * inputFileName, memory * mem){
-    FILE * asmFile;
-    int arguments[MAX_ARGS], nbArgs = 0, nextCharIndex, instructionIndex, lineIndex = FIRST_INSTRUCTION_BLOCK;
-    unsigned int hexCode = 0;
-
+int asm2hex(char * line, int * hexCode){
+    int arguments[MAX_ARGS], nbArgs = 0, nextCharIndex, instructionIndex;
+    int asmConverted = 0;
     /* Allocations mémoire */
-    char * lineBuffer = (char *) malloc(BUFFER_SIZE * sizeof(char));
     char * opcode = (char *) malloc(MAX_OPCODE_SIZE*sizeof(char));
-    if(lineBuffer == NULL)
-        exit(EXIT_FAILURE);
     if(opcode == NULL)
         exit(EXIT_FAILURE);
-    
-    /* Ouverture des fichier E/S */
-    asmFile = openFile(inputFileName, "r");
-    
-    /* Lecture ligne par ligne du fichier d'entrée */
-    while(fgets(lineBuffer, BUFFER_SIZE, asmFile) != NULL){
-        /* Si la n'est pas vide (les espaces et commentaires sont supprimés) */
-        if(purifyLine(lineBuffer)){
-            /* Extraction de l'opcode, et stockage de la valeur d'index juste après la fin de celui-ci */
-            nextCharIndex = extractOpcode(lineBuffer, opcode);
-            /* Extraction des arguments, et récupération de leur nombre */
-            nbArgs = extractArgs(lineBuffer, nextCharIndex, arguments);
-            /* Recherche du rang de l'instruction dans le tableau des instructions supportées */
-            instructionIndex = searchInstruction(opcode);
-            /* Si l'instruction est supportée et que le nombre d'arguments est bon */
-            if(instructionIndex != -1 && validateArgs(instructionIndex, arguments, nbArgs)){
-                /* Encodage hexadécimal et écriture dans la mémoire */
-                hexCode = getBinSegment(instructionIndex, arguments);
-                insertWord(lineIndex, hexCode, mem);
-                lineIndex+=4;
-            }
+    /* Si la ligne n'est pas vide (les espaces et commentaires sont supprimés) */
+    if(purifyLine(line)){
+        /* Extraction de l'opcode, et stockage de la valeur d'index juste après la fin de celui-ci */
+        nextCharIndex = extractOpcode(line, opcode);
+        /* Extraction des arguments, et récupération de leur nombre */
+        nbArgs = extractArgs(line, nextCharIndex, arguments);
+        /* Recherche du rang de l'instruction dans le tableau des instructions supportées */
+        instructionIndex = searchInstruction(opcode);
+        /* Si l'instruction est supportée et que le nombre d'arguments est bon */
+        if(instructionIndex != -1 && validateArgs(instructionIndex, arguments, nbArgs)){
+            /* Encodage hexadécimal et écriture dans le fichier de sortie */
+            *hexCode = getBinSegment(instructionIndex, arguments);
+            /* Correctly converted asm */
+            asmConverted = 1;
         }
     }
-    /* Libération mémoire et fermeture des fichiers */
+    /* Libération mémoire */
     free(opcode);
-    free(lineBuffer);
-    closeFile(inputFileName, asmFile);
-    return lineIndex;
+    return asmConverted;
 }
 
 int purifyLine(char * line){
@@ -207,8 +193,8 @@ int validateArgs(int instructionRank, int arguments[], int nbArgs){
 }
 
 
-unsigned int getBinSegment(int instructionRank, int arguments[]){
-    unsigned int segment = 0;
+int getBinSegment(int instructionRank, int arguments[]){
+    int segment = 0;
     /* L'application d'un tableau de karnaugh pourrait éventuellement factoriser 
         * certaines conditions au détriment de la lisibilité du code .
         */

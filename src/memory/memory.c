@@ -133,9 +133,9 @@ void showMemory(memory * mem){
     /* Création d'un pointeur local pour ne pas modifier *mem */
     for(index = 0; index < NB_BLOCKS_TO_PRINT*4; index+=4){
         if(isAllocatedWord(index, mem)){
-            printf("@%08x : %d\n", index, getWord(index, mem));
+            printf("@%08x : 0x%08x\n", index, getWord(index, mem));
         }else{
-            printf("@%08x : 0\n", index);
+            printf("@%08x : 0x%08x\n", index, 0);
         }
     }
 }
@@ -148,7 +148,7 @@ void showAllocatedSectors(memory * mem){
     }else{
         while(memPointer != NULL){
             /* Affichage de la valeur */
-            printf("@%08x : 0x%02x\n", memPointer->address, memPointer->data);
+            printf("@%08x : 0x%08x\n", memPointer->address, memPointer->data);
             /* Passage à l'élément suivant */
             memPointer = memPointer->next;
         }

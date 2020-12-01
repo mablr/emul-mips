@@ -8,17 +8,30 @@
 
 
 void interactiveMode(){
-
+    memory progMem = NULL;
+    char * userInput = (char *) malloc(sizeof(char)*BUFFER_SIZE);
+    int hexCode, args[3];
+    if(userInput == NULL){
+        exit(EXIT_FAILURE);
+    }
+    printf("\n###################\n# Mode Intéractif #\n###################\n\n");
+    while(fgets(userInput, BUFFER_SIZE, stdin) && asm2hex(userInput, &hexCode)){
+        printf("Instruction : %s\nCode Hexadécimal : %08x\n", userInput, hexCode);
+        showRegisters();
+    }
+    printf("\nFin d'exécution.\n");
 }
 void simpleMode(char * asmFile){
-    memory InstructionsMem = NULL;
-    loadProgMem(asmFile, 0, &InstructionsMem);
-    showMemory(&InstructionsMem);
+    memory instructionsMem = NULL;
+    memory progMem = NULL;
+    loadProgMem(asmFile, 0, &instructionsMem);
+    showMemory(&instructionsMem);
 }
 void stepMode(char * asmFile){
-    memory InstructionsMem = NULL;
-    loadProgMem(asmFile, 1, &InstructionsMem);
-    showMemory(&InstructionsMem);
+    memory instructionsMem = NULL;
+    memory progMem = NULL;
+    loadProgMem(asmFile, 1, &instructionsMem);
+    showMemory(&instructionsMem);
 }
 
 void loadProgMem(char * asmFile, int step, memory * mem){

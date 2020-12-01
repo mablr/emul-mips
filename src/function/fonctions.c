@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "register.h"
-/*Pas faites :  Store Word , Load Word, Load Upper Immediate, Jump Register, Jump and Link, No Operation, SystemCall*/
+/*Pas faites :  Store Word , Load Word, Load Upper Immediate, Jump Register, Jump and Link, No Operation*/
 /* Tableau d'entiers signés pour stocker les valeurs de registres */
 int registers[NB_REGISTERS];
 /* ADD WORD */
@@ -117,5 +117,26 @@ void mfhi(int reg){
     int value = getRegister(33);
     storeRegister(reg, value);
 }
+/*No Operation*/
+void nop(){
+}
+/*Load Word*/
+void lw(int reg, int targetAddress){
 
+}
+/*Store Word*/
+void sw(int reg, int targetAddress){
 
+}
+/* Load Upper Immediate */
+void lui(int reg, int immediate){
+
+}
+/* Jump Register */
+void jr(int reg){
+
+}
+/* Jump and Link */
+void jal(int targetAddress){
+
+}

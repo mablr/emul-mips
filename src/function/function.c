@@ -1,142 +1,162 @@
 #include <stdio.h>
-#include "register.h"
+#include "../register/register.h"
+
 /*Pas faites :  Store Word , Load Word, Load Upper Immediate, Jump Register, Jump and Link, No Operation*/
-/* Tableau d'entiers signés pour stocker les valeurs de registres */
-int registers[NB_REGISTERS];
+
 /* ADD WORD */
-int add(int regs, int reg1, int reg2){
+int add(int args[]){
     int overflowStatus=0;
-    int value = getRegister(reg1) + getRegister(reg2);
-    if(value +1 == 0)
+    long fullResult = getRegister(args[1]) + getRegister(args[2]);
+    int value;
+    /* Si débordement (overflow) */
+    if(fullResult & 0xFFFFFFFF00000000){
         overflowStatus = 1;
-    if(!overflowStatus)
-        storeRegister(regs, value);
+    }else{
+        value = fullResult & 0xFFFFFFFF;
+        storeRegister(args[0], value);
+    }
     return overflowStatus;
 }
 /* Add Immediate Word */
-int addi(int regs, int reg, int immediate){
+int addi(int args[]){
     int overflowStatus=0;
-    int value = getRegister(reg) + immediate;
+    int value = getRegister(args[1]) + args[2];
     if(value +1 == 0)
         overflowStatus = 1;
     if(!overflowStatus)
-        storeRegister(regs, value);
+        storeRegister(args[0], value);
     return overflowStatus;
 }
 /* AND */
-void and_(int regs, int reg1, int reg2){
-    int value = getRegister(reg1) & getRegister(reg2);
-    storeRegister(regs,value);
+int and_(int args[]){
+    int value = getRegister(args[1]) & getRegister(args[2]);
+    storeRegister(args[0],value);
+    return 0;
 }
 /* Branch on Equal */
-void beq(int reg1, int reg2, int offset){
-    int condition = reg1 == reg2;
-    if(condition)
-        registers[32] += offset;
+int beq(int args[]){
+    if(getRegister(args[0]) == getRegister(args[1]))
+        registers[32] += getRegister(args[2]);
+    return 0;
 } 
 /* Branch on Greater Than Zero */
-void bgtz(int reg, int offset){
-    int condition = getRegister(reg) > 0;
-    if(condition)
-        registers[32] += offset;
+int bgtz(int args[]){
+    if(getRegister(args[0]) > 0)
+        registers[32] += getRegister(args[1]);
+    return 0;
 } 
 /* Branch on Less Than or Equal to Zero */
-void blez(int reg, int offset){
-    int condition = getRegister(reg) <= 0;
-    if(condition)
-        registers[32] += offset;
+int blez(int args[]){
+    if(getRegister(args[0]) <= 0)
+        registers[32] += getRegister(args[1]);
+    return 0;
 } 
 /* Branch on Not Equal */
-void bne(int reg1, int reg2, int offset){
-    int condition = getRegister(reg1) != getRegister(reg2);
+int bne(int args[]){
+    int condition = getRegister(args[1]) != getRegister(args[2]);
     if(condition)
-        registers[32] += offset;
+        registers[32] += getRegister(args[2]);
+    return 0;
 } 
 /* Divide Word */
-void div(int reg1, int reg2){
+int div_(int args[]){
     int reste, quotient;
-    reste=getRegister(reg1)% getRegister(reg2);
-    quotient= getRegister(reg1) / getRegister(reg2);
+    reste=getRegister(args[1])% getRegister(args[2]);
+    quotient= getRegister(args[1]) / getRegister(args[2]);
     storeRegister(34, quotient); /*quotient dans le registre LO*/
     storeRegister(33, reste);    /*reste dans le registre HI*/
+    return 0;
 }
 /* Jump */
-void jump(int targetAddress){
-    storeRegister(32, targetAddress); 
+int j(int args[]){
+    storeRegister(32, getRegister(args[0])); 
+    return 0;
 }
 /* Or */
-void or_(int regs, int reg1, int reg2){
-    int value = getRegister(reg1) | getRegister(reg2);
-    storeRegister(regs,value);
+int or_(int args[]){
+    int value = getRegister(args[1]) | getRegister(args[2]);
+    storeRegister(args[0],value);
+    return 0;
 }
 /* Rotate Word Right */
-int rot(int regs, int reg, int bitRotate){
+int rotr(int args[]){
     int errorFlag=0;
-    int value = getRegister(reg) >> bitRotate;
-    storeRegister(regs, value);
+    int value = getRegister(args[1]) >> getRegister(args[2]);
+    storeRegister(args[0], value);
     return errorFlag;
 }
 /* Shift Word Left Logical */
-void sll(int regs, int reg, int bitRotate){
-    int value = getRegister(reg) << bitRotate;
-    storeRegister(regs, value);
+int sll(int args[]){
+    int value = getRegister(args[1]) << getRegister(args[2]);
+    storeRegister(args[0], value);
+    return 0;
+}
+
+/* Shift Word Right Logical */
+int srl(int args[]){
+    int value = getRegister(args[1]) >> getRegister(args[2]);
+    storeRegister(args[0], value);
+    return 0;
 }
 
 /* Set on Less Than */ 
-int slt(int regs, int reg1, int reg2){
+int slt(int args[]){
     int status=0;
-    if(getRegister(reg1) < getRegister(reg2))
+    if(getRegister(args[1]) < getRegister(args[2]))
         status=1;
     return status;
 }
 /*Subtract Word*/
-int sub(int regs, int reg1, int reg2){
+int sub(int args[]){
     int overflowStatus = 0;
-    int value = getRegister(reg1) - getRegister(reg2);
-    storeRegister(regs, value);
+    int value = getRegister(args[1]) - getRegister(args[2]);
+    storeRegister(args[0], value);
     return overflowStatus;
 }
 /* Exclusive OR*/
-void xor_(int regs, int reg1, int reg2){
-    int value = getRegister(reg1) ^ getRegister(reg2);
-    storeRegister(regs,value);
+int xor_(int args[]){
+    int value = getRegister(args[1]) ^ getRegister(args[2]);
+    storeRegister(args[0],value);
+    return 0;
 }
 /*Multiply Word*/
-void mult(int reg1, int reg2){
-    long value = getRegister(reg1)*getRegister(reg2);
+int mult(int args[]){
+    long value = getRegister(args[1])*getRegister(args[2]);
     registers[33]=(value & 0xFFFFFFFF00000000) >> 32;  /* Bits de poids forts dans HI*/
     registers[34]=(value & 0x00000000FFFFFFFF);        /* Bits de poids faibles dans LO*/
+    return 0;
 }
 /*Move From LO Register */
-void mflo(int reg){
-    int value = getRegister(34);
-    storeRegister(reg, value);
+int mflo(int args[]){
+    storeRegister(args[0], getRegister(args[34]));
+    return 0;
 }
 /*Move From HI Register*/
-void mfhi(int reg){
-    int value = getRegister(33);
-    storeRegister(reg, value);
+int mfhi(int args[]){
+    storeRegister(args[0], getRegister(args[33]));
+    return 0;
 }
 /*No Operation*/
-void nop(){
+int nop(int args[]){
+    return 0;
 }
 /*Load Word*/
-void lw(int reg, int targetAddress){
-
+int lw(int args[]){
+    return 0;
 }
 /*Store Word*/
-void sw(int reg, int targetAddress){
-
+int sw(int args[]){
+    return 0;
 }
 /* Load Upper Immediate */
-void lui(int reg, int immediate){
-
+int lui(int args[]){
+    return 0;
 }
 /* Jump Register */
-void jr(int reg){
-
+int jr(int args[]){
+    return 0;
 }
 /* Jump and Link */
-void jal(int targetAddress){
-
+int jal(int args[]){
+    return 0;
 }

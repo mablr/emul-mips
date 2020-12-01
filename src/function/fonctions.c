@@ -24,7 +24,7 @@ int addi(int regs, int reg, int immediate){
     return overflowStatus;
 }
 /* AND */
-void and(int regs, int reg1, int reg2){
+void and_(int regs, int reg1, int reg2){
     int value = getRegister(reg1) & getRegister(reg2);
     storeRegister(regs,value);
 }
@@ -65,7 +65,7 @@ void jump(int targetAddress){
     storeRegister(32, targetAddress); 
 }
 /* Or */
-void or(int regs, int reg1, int reg2){
+void or_(int regs, int reg1, int reg2){
     int value = getRegister(reg1) | getRegister(reg2);
     storeRegister(regs,value);
 }
@@ -97,7 +97,7 @@ int sub(int regs, int reg1, int reg2){
     return overflowStatus;
 }
 /* Exclusive OR*/
-void xor(int regs, int reg1, int reg2){
+void xor_(int regs, int reg1, int reg2){
     int value = getRegister(reg1) ^ getRegister(reg2);
     storeRegister(regs,value);
 }

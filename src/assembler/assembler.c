@@ -4,35 +4,35 @@
 #include <string.h>
 #include "assembler.h"
 #include "../stream/stream.h"
-#include "../memory/memory.h"
+#include "../function/function.h"
 
 /* Instructions MIPS prises en charge par l'assembleur */
-instruction instructions[] = {{"ADD",  0x149, 0x00, 0x20},
-                              {"ADDI", 0x150, 0x08},
-                              {"AND",  0x149, 0x00, 0x24},
-                              {"BEQ",  0x160, 0x04},
-                              {"BGTZ", 0x120, 0x07},
-                              {"BLEZ", 0x120, 0x06},
-                              {"BNE",  0x160, 0x05},
-                              {"DIV",  0x141, 0x00, 0x1A},
-                              {"J",    0x400, 0x02},
-                              {"JAL",  0x400, 0x03},
-                              {"JR",   0x103, 0x00, 0x08},
-                              {"LUI",  0x050, 0x0F},
-                              {"LW",   0x260, 0x23},
-                              {"MFHI", 0x009, 0x00, 0x10},
-                              {"MFLO", 0x009, 0x00, 0x12},
-                              {"MULT", 0x141, 0x00, 0x18},
-                              {"NOP",  0x000, 0x00, 0x00},
-                              {"OR",   0x149, 0x00, 0x25},
-                              {"ROTR", 0x0CD, 0x00, 0x02},
-                              {"SLL",  0x04D, 0x00, 0x00},
-                              {"SLT",  0x149, 0x00, 0x2A},
-                              {"SRL",  0x04D, 0x00, 0x02},
-                              {"SUB",  0x149, 0x00, 0x22},
-                              {"SW",   0x260, 0x2B},
-                              {"XOR",  0x149, 0x00, 0x26}
-                            };
+const instruction instructions[] = {{"ADD",  &add,  0x149, 0x00, 0x20},
+                                    {"ADDI", &addi, 0x150, 0x08},
+                                    {"AND",  &and_,  0x149, 0x00, 0x24},
+                                    {"BEQ",  &beq,  0x160, 0x04},
+                                    {"BGTZ", &bgtz, 0x120, 0x07},
+                                    {"BLEZ", &blez, 0x120, 0x06},
+                                    {"BNE",  &bne,  0x160, 0x05},
+                                    {"DIV",  &div_,  0x141, 0x00, 0x1A},
+                                    {"J",    &j,    0x400, 0x02},
+                                    {"JAL",  &jal,  0x400, 0x03},
+                                    {"JR",   &jr,   0x103, 0x00, 0x08},
+                                    {"LUI",  &lui,  0x050, 0x0F},
+                                    {"LW",   &lw,   0x260, 0x23},
+                                    {"MFHI", &mfhi, 0x009, 0x00, 0x10},
+                                    {"MFLO", &mflo, 0x009, 0x00, 0x12},
+                                    {"MULT", &mult, 0x141, 0x00, 0x18},
+                                    {"NOP",  &nop,  0x000, 0x00, 0x00},
+                                    {"OR",   &or_,   0x149, 0x00, 0x25},
+                                    {"ROTR", &rotr, 0x0CD, 0x00, 0x02},
+                                    {"SLL",  &sll, 0x04D, 0x00, 0x00},
+                                    {"SLT",  &slt, 0x149, 0x00, 0x2A},
+                                    {"SRL",  &srl, 0x04D, 0x00, 0x02},
+                                    {"SUB",  &sub, 0x149, 0x00, 0x22},
+                                    {"SW",   &sw, 0x260, 0x2B},
+                                    {"XOR",  &xor_, 0x149, 0x00, 0x26}
+                                    };
 
 int asm2hex(char * line, int * hexCode){
     int arguments[MAX_ARGS], nbArgs = 0, nextCharIndex, instructionIndex;

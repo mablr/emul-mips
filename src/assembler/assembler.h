@@ -51,10 +51,12 @@
 typedef struct instruction instruction;
 struct instruction{
     char name[MAX_OPCODE_SIZE+1];
+    int (*fct)(int args[]);
     int type;
     int opcode;
     int function;
 };
+extern const instruction instructions[];
 
 int asm2hex(char * line, int * hexCode);
 int purifyLine(char * line);

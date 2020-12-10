@@ -149,6 +149,89 @@ int extractArgs(char * line, int indexToBegin, int arguments[]){
     return nbArgsFound;
 }
 
+void extractArgsHex(int hexCode, int instructionRank, int arguments[]){
+    if( !(instructions[instructionRank].type ^ (RS_FIELD|RT_FIELD|RD_FIELD|FCT_FIELD)) ){
+        /* ADD,AND,OR,SLT,SUB,XOR */
+        /* RS */
+        arguments[1] = (hexCode & RS_MASK) >> RS_SHIFT;
+        /* RT */
+        arguments[2] = (hexCode & RT_MASK) >> RT_SHIFT;
+        /* RD */
+        arguments[0] = (hexCode & RD_MASK) >> RD_SHIFT;
+    }else if( !(instructions[instructionRank].type ^ (RS_FIELD|RT_FIELD|OFFSET_FIELD)) ){
+        /* BEQ,BNE */
+        /* RS */
+        arguments[0] = (hexCode & RS_MASK) >> RS_SHIFT;
+        /* RT */
+        arguments[1] = (hexCode & RT_MASK) >> RT_SHIFT;
+        /* OFFSET */
+        arguments[2] = (hexCode & OFFSET_MASK) >> OFFSET_SHIFT;
+    }else if( !(instructions[instructionRank].type ^ (RS_FIELD|OFFSET_FIELD)) ){
+        /* BGTZ, BLEZ */
+        /* RS */
+        arguments[0] = (hexCode & RS_MASK) >> RS_SHIFT;
+        /* OFFSET */
+        arguments[1] = (hexCode & OFFSET_MASK) >> OFFSET_SHIFT;
+    }else if( !(instructions[instructionRank].type ^ (RS_FIELD|RT_FIELD|FCT_FIELD)) ){
+        /* DIV,MUL */
+        /* RS */
+        arguments[0] = (hexCode & RS_MASK) >> RS_SHIFT;
+        /* RT */
+        arguments[1] = (hexCode & RT_MASK) >> RT_SHIFT;
+    }else if( !(instructions[instructionRank].type ^ (RS_FIELD|RT_FIELD|IMMEDIATE_FIELD)) ){
+        /* ADDI */
+        /* RT */
+        arguments[0] = (hexCode & RT_MASK) >> RT_SHIFT;
+        /* RS */
+        arguments[1] = (hexCode & RS_MASK) >> RS_SHIFT;
+        /* IMMEDIATE */
+        arguments[2] = (hexCode & IMMEDIATE_MASK) >> IMMEDIATE_SHIFT;
+    }else if( !(instructions[instructionRank].type ^ (RT_FIELD|IMMEDIATE_FIELD)) ){
+        /* LUI */
+        /* RT */
+        arguments[0] = (hexCode & RT_MASK) >> RT_SHIFT;
+        /* IMMEDIATE */
+        arguments[1] = (hexCode & IMMEDIATE_MASK) >> IMMEDIATE_SHIFT;
+    }else if( !(instructions[instructionRank].type ^ (BASE_FIELD|RT_FIELD|OFFSET_FIELD)) ){
+        /* LW,SW */
+        /* BASE */
+        arguments[2] = (hexCode & BASE_MASK) >> BASE_SHIFT;
+        /* RT */
+        arguments[0] = (hexCode & RT_MASK) >> RT_SHIFT;
+        /* OFFSET */
+        arguments[1] = (hexCode & OFFSET_MASK) >> OFFSET_SHIFT;
+    }else if( !(instructions[instructionRank].type ^ (RD_FIELD|FCT_FIELD)) ){
+        /* MFHI,MFLO */
+        /* RD */
+        arguments[0] = (hexCode & RD_MASK) >> RD_SHIFT;
+    }else if( !(instructions[instructionRank].type ^ INDEX_FIELD) ){
+        /* J,JAL */
+        /* INDEX */
+        arguments[0] = (hexCode & INDEX_MASK) >> INDEX_SHIFT;
+    }else if( !(instructions[instructionRank].type ^ (RS_FIELD|HINT_FIELD|FCT_FIELD)) ){
+        /* JR */
+        /* RS */
+        arguments[0] = (hexCode & RS_MASK) >> RS_SHIFT;
+        /* HINT : assuming we use MIPS I version, thus HINT = 0*/
+    }else if( !(instructions[instructionRank].type ^ (RT_FIELD|RD_FIELD|SA_FIELD|FCT_FIELD)) ){
+        /* SLL,SRL */
+        /* RT */
+        arguments[1] = (hexCode & RT_MASK) >> RT_SHIFT;
+        /* RD */
+        arguments[0] = (hexCode & RD_MASK) >> RD_SHIFT;
+        /* SA */
+        arguments[2] = (hexCode & SA_MASK) >> SA_SHIFT;
+    }else if( !(instructions[instructionRank].type ^ (ROTATE_FIELD|RT_FIELD|RD_FIELD|SA_FIELD|FCT_FIELD)) ){
+        /* ROTR */
+        /* RT */
+        arguments[1] = (hexCode & RT_MASK) >> RT_SHIFT;
+        /* RD */
+        arguments[0] = (hexCode & RD_MASK) >> RD_SHIFT;
+        /* SA */
+        arguments[2] = (hexCode & SA_MASK) >> SA_SHIFT;
+    }
+}
+
 /* Convertisseur de portions de chaînes de caractères en entiers signés */
 int str2int(char * str, int beginChar, int endChar){
     int sign = 1, value = 0, index = beginChar;

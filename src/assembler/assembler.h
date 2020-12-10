@@ -62,6 +62,7 @@ int asm2hex(char * line, int * hexCode);
 int purifyLine(char * line);
 int extractOpcode(char * line, char * opcode);
 int extractArgs(char * line, int indexToBegin, int arguments[]);
+void extractArgsHex(int hexCode, int instructionRank, int arguments[]);
 int str2int(char * str, int beginChar, int endChar);
 int searchInstruction(char * opcode);
 int searchInstructionHex(int hexCode);

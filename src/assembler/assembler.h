@@ -64,6 +64,7 @@ int extractOpcode(char * line, char * opcode);
 int extractArgs(char * line, int indexToBegin, int arguments[]);
 int str2int(char * str, int beginChar, int endChar);
 int searchInstruction(char * opcode);
+int searchInstructionHex(int hexCode);
 int validateArgs(int instructionRank, int arguments[], int nbArgs);
 int getBinSegment(int instructionRank, int arguments[]);
 

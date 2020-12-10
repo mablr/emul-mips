@@ -178,6 +178,26 @@ int searchInstruction(char * opcode){
     return instructionRank;
 }
 
+int searchInstructionHex(int hexCode){
+    int index = 0, instructionRank = -1, nbInstructions = sizeof(instructions)/sizeof(instruction);
+    while(index < nbInstructions && instructionRank == -1){
+        if(((hexCode & OPCODE_MASK) >> OPCODE_SHIFT) == instructions[index].opcode){
+            if(instructions[index].opcode == 0){
+                if(((hexCode & FCT_MASK) >> FCT_SHIFT) == instructions[index].function){
+                    instructionRank = index;
+                }
+            }else{
+                instructionRank = index;
+            }
+        }
+        index++;        
+    }
+    /* Retourne la position de l'instruction recherchée dans le tableau des instructions supportées,
+     * Retourne -1 en cas d'échec
+     */
+    return instructionRank;
+}
+
 int validateArgs(int instructionRank, int arguments[], int nbArgs){
     int cnt = 0, field;
     /* Comptage du nombre de champs du registre ayant besoin d'être remplis avec

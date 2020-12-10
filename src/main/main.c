@@ -13,8 +13,7 @@ int main(int argc, char * argv[]){
         /* Mode pas à pas */
         stepMode(argv[1]);
     }else{
-        printf("Wrong arguments.\n");
+        printf("Wrong arguments.\nUsage : ./emul-mips [inputFile] [-pas]\n");
     }
-
     return 0;
 }

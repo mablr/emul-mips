@@ -63,8 +63,8 @@ int div_(int args[]){
     int reste, quotient;
     reste=getRegister(args[1])% getRegister(args[2]);
     quotient= getRegister(args[1]) / getRegister(args[2]);
-    storeRegister(34, quotient); /*quotient dans le registre LO*/
-    storeRegister(33, reste);    /*reste dans le registre HI*/
+    storeRegister(LO, quotient); /*quotient dans le registre LO*/
+    storeRegister(HI, reste);    /*reste dans le registre HI*/
     return 0;
 }
 /* Jump */
@@ -122,18 +122,18 @@ int xor_(int args[]){
 /*Multiply Word*/
 int mult(int args[]){
     long value = getRegister(args[1])*getRegister(args[2]);
-    registers[33]=(value & 0xFFFFFFFF00000000) >> 32;  /* Bits de poids forts dans HI*/
-    registers[34]=(value & 0x00000000FFFFFFFF);        /* Bits de poids faibles dans LO*/
+    registers[HI]=(value & 0xFFFFFFFF00000000) >> 32;  /* Bits de poids forts dans HI*/
+    registers[LO]=(value & 0x00000000FFFFFFFF);        /* Bits de poids faibles dans LO*/
     return 0;
 }
 /*Move From LO Register */
 int mflo(int args[]){
-    storeRegister(args[0], getRegister(args[34]));
+    storeRegister(args[0], getRegister(args[LO]));
     return 0;
 }
 /*Move From HI Register*/
 int mfhi(int args[]){
-    storeRegister(args[0], getRegister(args[33]));
+    storeRegister(args[0], getRegister(args[HI]));
     return 0;
 }
 /*No Operation*/

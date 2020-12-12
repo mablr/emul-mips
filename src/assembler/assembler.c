@@ -166,12 +166,16 @@ void extractArgsHex(int hexCode, int instructionRank, int arguments[]){
         arguments[1] = (hexCode & RT_MASK) >> RT_SHIFT;
         /* OFFSET */
         arguments[2] = (hexCode & OFFSET_MASK) >> OFFSET_SHIFT;
+        /* Bourrage par des 0 ou des 1 pour obtenir un entier signé */
+        arguments[2] += (hexCode & ((OFFSET_MASK+1)>>1)) ? ~OFFSET_MASK : 0;
     }else if( !(instructions[instructionRank].type ^ (RS_FIELD|OFFSET_FIELD)) ){
         /* BGTZ, BLEZ */
         /* RS */
         arguments[0] = (hexCode & RS_MASK) >> RS_SHIFT;
         /* OFFSET */
         arguments[1] = (hexCode & OFFSET_MASK) >> OFFSET_SHIFT;
+        /* Bourrage par des 0 ou des 1 pour obtenir un entier signé */
+        arguments[1] += (hexCode & ((OFFSET_MASK+1)>>1)) ? ~OFFSET_MASK : 0;
     }else if( !(instructions[instructionRank].type ^ (RS_FIELD|RT_FIELD|FCT_FIELD)) ){
         /* DIV,MUL */
         /* RS */
@@ -186,12 +190,16 @@ void extractArgsHex(int hexCode, int instructionRank, int arguments[]){
         arguments[1] = (hexCode & RS_MASK) >> RS_SHIFT;
         /* IMMEDIATE */
         arguments[2] = (hexCode & IMMEDIATE_MASK) >> IMMEDIATE_SHIFT;
+        /* Bourrage par des 0 ou des 1 pour obtenir un entier signé */
+        arguments[2] += (hexCode & ((IMMEDIATE_MASK+1)>>1)) ? ~IMMEDIATE_MASK : 0;
     }else if( !(instructions[instructionRank].type ^ (RT_FIELD|IMMEDIATE_FIELD)) ){
         /* LUI */
         /* RT */
         arguments[0] = (hexCode & RT_MASK) >> RT_SHIFT;
         /* IMMEDIATE */
         arguments[1] = (hexCode & IMMEDIATE_MASK) >> IMMEDIATE_SHIFT;
+        /* Bourrage par des 0 ou des 1 pour obtenir un entier signé */
+        arguments[1] += (hexCode & ((IMMEDIATE_MASK+1)>>1)) ? ~IMMEDIATE_SHIFT : 0;
     }else if( !(instructions[instructionRank].type ^ (BASE_FIELD|RT_FIELD|OFFSET_FIELD)) ){
         /* LW,SW */
         /* BASE */
@@ -200,6 +208,8 @@ void extractArgsHex(int hexCode, int instructionRank, int arguments[]){
         arguments[0] = (hexCode & RT_MASK) >> RT_SHIFT;
         /* OFFSET */
         arguments[1] = (hexCode & OFFSET_MASK) >> OFFSET_SHIFT;
+        /* Bourrage par des 0 ou des 1 pour obtenir un entier signé */
+        arguments[1] += (hexCode & ((OFFSET_MASK+1)>>1)) ? ~OFFSET_MASK : 0;
     }else if( !(instructions[instructionRank].type ^ (RD_FIELD|FCT_FIELD)) ){
         /* MFHI,MFLO */
         /* RD */
@@ -208,6 +218,8 @@ void extractArgsHex(int hexCode, int instructionRank, int arguments[]){
         /* J,JAL */
         /* INDEX */
         arguments[0] = (hexCode & INDEX_MASK) >> INDEX_SHIFT;
+        /* Bourrage par des 0 ou des 1 pour obtenir un entier signé */
+        arguments[0] += (hexCode & ((INDEX_MASK+1)>>1)) ? ~INDEX_MASK : 0;
     }else if( !(instructions[instructionRank].type ^ (RS_FIELD|HINT_FIELD|FCT_FIELD)) ){
         /* JR */
         /* RS */

@@ -15,7 +15,8 @@ void interactiveMode(){
     if(userInput == NULL){
         exit(EXIT_FAILURE);
     }
-    printf("\n###################\n# Mode Intéractif #\n###################\n\n$ ");
+    printf("\n###################\n# Mode Intéractif #\n###################\n");
+    printf("Les branchements et jumps ne sont pas disponibles dans ce mode\n\n$ ");
     while(fgets(userInput, BUFFER_SIZE, stdin) && asm2hex(userInput, &hexCode)){
         printf("\nInstruction : %s\nCode Hexadécimal : %08x\n", userInput, hexCode);
         instructionIndex = searchInstructionHex(hexCode);
@@ -43,13 +44,15 @@ void simpleMode(char * asmFile){
     memory instructionsMem = NULL;
     loadProgMem(asmFile, 0, &instructionsMem);
     runInstructions(0, &instructionsMem, &progMem);
-    showMemory(&instructionsMem);
+    showRegisters();
+    showMemory(&progMem);
 }
 void stepMode(char * asmFile){
     memory instructionsMem = NULL;
     loadProgMem(asmFile, 1, &instructionsMem);
     runInstructions(1, &instructionsMem, &progMem);
-    showMemory(&instructionsMem);
+    showRegisters();
+    showMemory(&progMem);
 }
 
 void loadProgMem(char * asmFile, int step, memory * mem){
@@ -99,7 +102,9 @@ void runInstructions(int step, memory * instructionsMem, memory * progMem){
             /* Extraction des arguments */
             extractArgsHex(hexCode, instructionIndex, args);
             /* Exécution de l'instruction */
-            instructions[instructionIndex].fct(args);
+            if(instructions[instructionIndex].fct(args)){
+                fprintf(stderr,"@%08x Exception détectée !\n", getRegister(PC));
+            }
             /* Traitement du "pas à pas" */
             if(step){
                 while(strcmp(userInputStep, "c\n")){
@@ -116,6 +121,6 @@ void runInstructions(int step, memory * instructionsMem, memory * progMem){
             }
             
         }
-        storeRegister(PC, getRegister(PC)+4); /* Todo : Vérifier le comportement en cas de Jump/Branch */
+        storeRegister(PC, getRegister(PC)+4);
     }
 }

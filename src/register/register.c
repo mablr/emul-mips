@@ -6,7 +6,7 @@ int registers[NB_REGISTERS];
 
 /* Stocke la valeur donnée si le registre indiqué existe */
 void storeRegister(int index, int value){
-    if(index >= 0 && index < NB_REGISTERS){
+    if(index > 0 && index < NB_REGISTERS){
         registers[index] = value;
     }
 }
@@ -18,4 +18,19 @@ int getRegister(int index){
         value = registers[index];
     }
     return value;
+}
+/* Affiche les registres */
+void showRegisters(void){
+    int i, columnIndex = 0;
+    for(i = 0; i < GENERAL_REGISTERS; i++){
+        printf("$%02d : %d", i, registers[i]);
+        columnIndex++;
+        if(columnIndex == 4){
+            printf("\n");
+            columnIndex = 0;
+        }else{
+            printf("\t\t");
+        }
+    }
+    printf("\nHI : %d \nLO : %d \nPC : %d\n\n", registers[33], registers[34], registers[32]);
 }

@@ -4,76 +4,62 @@
 #include <string.h>
 #include "assembler.h"
 #include "../stream/stream.h"
-#include "../memory/memory.h"
+#include "../function/function.h"
 
 /* Instructions MIPS prises en charge par l'assembleur */
-instruction instructions[] = {{"ADD",  0x149, 0x00, 0x20},
-                              {"ADDI", 0x150, 0x08},
-                              {"AND",  0x149, 0x00, 0x24},
-                              {"BEQ",  0x160, 0x04},
-                              {"BGTZ", 0x120, 0x07},
-                              {"BLEZ", 0x120, 0x06},
-                              {"BNE",  0x160, 0x05},
-                              {"DIV",  0x141, 0x00, 0x1A},
-                              {"J",    0x400, 0x02},
-                              {"JAL",  0x400, 0x03},
-                              {"JR",   0x103, 0x00, 0x08},
-                              {"LUI",  0x050, 0x0F},
-                              {"LW",   0x260, 0x23},
-                              {"MFHI", 0x009, 0x00, 0x10},
-                              {"MFLO", 0x009, 0x00, 0x12},
-                              {"MULT", 0x141, 0x00, 0x18},
-                              {"NOP",  0x000, 0x00, 0x00},
-                              {"OR",   0x149, 0x00, 0x25},
-                              {"ROTR", 0x0CD, 0x00, 0x02},
-                              {"SLL",  0x04D, 0x00, 0x00},
-                              {"SLT",  0x149, 0x00, 0x2A},
-                              {"SRL",  0x04D, 0x00, 0x02},
-                              {"SUB",  0x149, 0x00, 0x22},
-                              {"SW",   0x260, 0x2B},
-                              {"XOR",  0x149, 0x00, 0x26}
-                            };
+const instruction instructions[] = {{"ADD",  &add,  0x149, 0x00, 0x20},
+                                    {"ADDI", &addi, 0x150, 0x08},
+                                    {"AND",  &and_,  0x149, 0x00, 0x24},
+                                    {"BEQ",  &beq,  0x160, 0x04},
+                                    {"BGTZ", &bgtz, 0x120, 0x07},
+                                    {"BLEZ", &blez, 0x120, 0x06},
+                                    {"BNE",  &bne,  0x160, 0x05},
+                                    {"DIV",  &div_,  0x141, 0x00, 0x1A},
+                                    {"J",    &j,    0x400, 0x02},
+                                    {"JAL",  &jal,  0x400, 0x03},
+                                    {"JR",   &jr,   0x103, 0x00, 0x08},
+                                    {"LUI",  &lui,  0x050, 0x0F},
+                                    {"LW",   &lw,   0x260, 0x23},
+                                    {"MFHI", &mfhi, 0x009, 0x00, 0x10},
+                                    {"MFLO", &mflo, 0x009, 0x00, 0x12},
+                                    {"MULT", &mult, 0x141, 0x00, 0x18},
+                                    {"NOP",  &nop,  0x000, 0x00, 0x00},
+                                    {"OR",   &or_,   0x149, 0x00, 0x25},
+                                    {"ROTR", &rotr, 0x0CD, 0x00, 0x02},
+                                    {"SLL",  &sll, 0x04D, 0x00, 0x00},
+                                    {"SLT",  &slt, 0x149, 0x00, 0x2A},
+                                    {"SRL",  &srl, 0x04D, 0x00, 0x02},
+                                    {"SUB",  &sub, 0x149, 0x00, 0x22},
+                                    {"SW",   &sw, 0x260, 0x2B},
+                                    {"XOR",  &xor_, 0x149, 0x00, 0x26}
+                                    };
 
-int loadAsmFile(char * inputFileName, memory * mem){
-    FILE * asmFile;
-    int arguments[MAX_ARGS], nbArgs = 0, nextCharIndex, instructionIndex, lineIndex = FIRST_INSTRUCTION_BLOCK;
-    unsigned int hexCode = 0;
-
+int asm2hex(char * line, int * hexCode){
+    int arguments[MAX_ARGS], nbArgs = 0, nextCharIndex, instructionIndex;
+    int asmConverted = 0;
     /* Allocations mémoire */
-    char * lineBuffer = (char *) malloc(BUFFER_SIZE * sizeof(char));
     char * opcode = (char *) malloc(MAX_OPCODE_SIZE*sizeof(char));
-    if(lineBuffer == NULL)
-        exit(EXIT_FAILURE);
     if(opcode == NULL)
         exit(EXIT_FAILURE);
-    
-    /* Ouverture des fichier E/S */
-    asmFile = openFile(inputFileName, "r");
-    
-    /* Lecture ligne par ligne du fichier d'entrée */
-    while(fgets(lineBuffer, BUFFER_SIZE, asmFile) != NULL){
-        /* Si la n'est pas vide (les espaces et commentaires sont supprimés) */
-        if(purifyLine(lineBuffer)){
-            /* Extraction de l'opcode, et stockage de la valeur d'index juste après la fin de celui-ci */
-            nextCharIndex = extractOpcode(lineBuffer, opcode);
-            /* Extraction des arguments, et récupération de leur nombre */
-            nbArgs = extractArgs(lineBuffer, nextCharIndex, arguments);
-            /* Recherche du rang de l'instruction dans le tableau des instructions supportées */
-            instructionIndex = searchInstruction(opcode);
-            /* Si l'instruction est supportée et que le nombre d'arguments est bon */
-            if(instructionIndex != -1 && validateArgs(instructionIndex, arguments, nbArgs)){
-                /* Encodage hexadécimal et écriture dans la mémoire */
-                hexCode = getBinSegment(instructionIndex, arguments);
-                insertWord(lineIndex, hexCode, mem);
-                lineIndex+=4;
-            }
+    /* Si la ligne n'est pas vide (les espaces et commentaires sont supprimés) */
+    if(purifyLine(line)){
+        /* Extraction de l'opcode, et stockage de la valeur d'index juste après la fin de celui-ci */
+        nextCharIndex = extractOpcode(line, opcode);
+        /* Extraction des arguments, et récupération de leur nombre */
+        nbArgs = extractArgs(line, nextCharIndex, arguments);
+        /* Recherche du rang de l'instruction dans le tableau des instructions supportées */
+        instructionIndex = searchInstruction(opcode);
+        /* Si l'instruction est supportée et que le nombre d'arguments est bon */
+        if(instructionIndex != -1 && validateArgs(instructionIndex, arguments, nbArgs)){
+            /* Encodage hexadécimal et écriture dans le fichier de sortie */
+            *hexCode = getBinSegment(instructionIndex, arguments);
+            /* Correctly converted asm */
+            asmConverted = 1;
         }
     }
-    /* Libération mémoire et fermeture des fichiers */
+    /* Libération mémoire */
     free(opcode);
-    free(lineBuffer);
-    closeFile(inputFileName, asmFile);
-    return lineIndex;
+    return asmConverted;
 }
 
 int purifyLine(char * line){
@@ -163,6 +149,101 @@ int extractArgs(char * line, int indexToBegin, int arguments[]){
     return nbArgsFound;
 }
 
+void extractArgsHex(int hexCode, int instructionRank, int arguments[]){
+    if( !(instructions[instructionRank].type ^ (RS_FIELD|RT_FIELD|RD_FIELD|FCT_FIELD)) ){
+        /* ADD,AND,OR,SLT,SUB,XOR */
+        /* RS */
+        arguments[1] = (hexCode & RS_MASK) >> RS_SHIFT;
+        /* RT */
+        arguments[2] = (hexCode & RT_MASK) >> RT_SHIFT;
+        /* RD */
+        arguments[0] = (hexCode & RD_MASK) >> RD_SHIFT;
+    }else if( !(instructions[instructionRank].type ^ (RS_FIELD|RT_FIELD|OFFSET_FIELD)) ){
+        /* BEQ,BNE */
+        /* RS */
+        arguments[0] = (hexCode & RS_MASK) >> RS_SHIFT;
+        /* RT */
+        arguments[1] = (hexCode & RT_MASK) >> RT_SHIFT;
+        /* OFFSET */
+        arguments[2] = (hexCode & OFFSET_MASK) >> OFFSET_SHIFT;
+        /* Bourrage par des 0 ou des 1 pour obtenir un entier signé */
+        arguments[2] += (hexCode & ((OFFSET_MASK+1)>>1)) ? ~OFFSET_MASK : 0;
+    }else if( !(instructions[instructionRank].type ^ (RS_FIELD|OFFSET_FIELD)) ){
+        /* BGTZ, BLEZ */
+        /* RS */
+        arguments[0] = (hexCode & RS_MASK) >> RS_SHIFT;
+        /* OFFSET */
+        arguments[1] = (hexCode & OFFSET_MASK) >> OFFSET_SHIFT;
+        /* Bourrage par des 0 ou des 1 pour obtenir un entier signé */
+        arguments[1] += (hexCode & ((OFFSET_MASK+1)>>1)) ? ~OFFSET_MASK : 0;
+    }else if( !(instructions[instructionRank].type ^ (RS_FIELD|RT_FIELD|FCT_FIELD)) ){
+        /* DIV,MUL */
+        /* RS */
+        arguments[0] = (hexCode & RS_MASK) >> RS_SHIFT;
+        /* RT */
+        arguments[1] = (hexCode & RT_MASK) >> RT_SHIFT;
+    }else if( !(instructions[instructionRank].type ^ (RS_FIELD|RT_FIELD|IMMEDIATE_FIELD)) ){
+        /* ADDI */
+        /* RT */
+        arguments[0] = (hexCode & RT_MASK) >> RT_SHIFT;
+        /* RS */
+        arguments[1] = (hexCode & RS_MASK) >> RS_SHIFT;
+        /* IMMEDIATE */
+        arguments[2] = (hexCode & IMMEDIATE_MASK) >> IMMEDIATE_SHIFT;
+        /* Bourrage par des 0 ou des 1 pour obtenir un entier signé */
+        arguments[2] += (hexCode & ((IMMEDIATE_MASK+1)>>1)) ? ~IMMEDIATE_MASK : 0;
+    }else if( !(instructions[instructionRank].type ^ (RT_FIELD|IMMEDIATE_FIELD)) ){
+        /* LUI */
+        /* RT */
+        arguments[0] = (hexCode & RT_MASK) >> RT_SHIFT;
+        /* IMMEDIATE */
+        arguments[1] = (hexCode & IMMEDIATE_MASK) >> IMMEDIATE_SHIFT;
+        /* Bourrage par des 0 ou des 1 pour obtenir un entier signé */
+        arguments[1] += (hexCode & ((IMMEDIATE_MASK+1)>>1)) ? ~IMMEDIATE_SHIFT : 0;
+    }else if( !(instructions[instructionRank].type ^ (BASE_FIELD|RT_FIELD|OFFSET_FIELD)) ){
+        /* LW,SW */
+        /* BASE */
+        arguments[2] = (hexCode & BASE_MASK) >> BASE_SHIFT;
+        /* RT */
+        arguments[0] = (hexCode & RT_MASK) >> RT_SHIFT;
+        /* OFFSET */
+        arguments[1] = (hexCode & OFFSET_MASK) >> OFFSET_SHIFT;
+        /* Bourrage par des 0 ou des 1 pour obtenir un entier signé */
+        arguments[1] += (hexCode & ((OFFSET_MASK+1)>>1)) ? ~OFFSET_MASK : 0;
+    }else if( !(instructions[instructionRank].type ^ (RD_FIELD|FCT_FIELD)) ){
+        /* MFHI,MFLO */
+        /* RD */
+        arguments[0] = (hexCode & RD_MASK) >> RD_SHIFT;
+    }else if( !(instructions[instructionRank].type ^ INDEX_FIELD) ){
+        /* J,JAL */
+        /* INDEX */
+        arguments[0] = (hexCode & INDEX_MASK) >> INDEX_SHIFT;
+        /* Bourrage par des 0 ou des 1 pour obtenir un entier signé */
+        arguments[0] += (hexCode & ((INDEX_MASK+1)>>1)) ? ~INDEX_MASK : 0;
+    }else if( !(instructions[instructionRank].type ^ (RS_FIELD|HINT_FIELD|FCT_FIELD)) ){
+        /* JR */
+        /* RS */
+        arguments[0] = (hexCode & RS_MASK) >> RS_SHIFT;
+        /* HINT : assuming we use MIPS I version, thus HINT = 0*/
+    }else if( !(instructions[instructionRank].type ^ (RT_FIELD|RD_FIELD|SA_FIELD|FCT_FIELD)) ){
+        /* SLL,SRL */
+        /* RT */
+        arguments[1] = (hexCode & RT_MASK) >> RT_SHIFT;
+        /* RD */
+        arguments[0] = (hexCode & RD_MASK) >> RD_SHIFT;
+        /* SA */
+        arguments[2] = (hexCode & SA_MASK) >> SA_SHIFT;
+    }else if( !(instructions[instructionRank].type ^ (ROTATE_FIELD|RT_FIELD|RD_FIELD|SA_FIELD|FCT_FIELD)) ){
+        /* ROTR */
+        /* RT */
+        arguments[1] = (hexCode & RT_MASK) >> RT_SHIFT;
+        /* RD */
+        arguments[0] = (hexCode & RD_MASK) >> RD_SHIFT;
+        /* SA */
+        arguments[2] = (hexCode & SA_MASK) >> SA_SHIFT;
+    }
+}
+
 /* Convertisseur de portions de chaînes de caractères en entiers signés */
 int str2int(char * str, int beginChar, int endChar){
     int sign = 1, value = 0, index = beginChar;
@@ -192,6 +273,26 @@ int searchInstruction(char * opcode){
     return instructionRank;
 }
 
+int searchInstructionHex(int hexCode){
+    int index = 0, instructionRank = -1, nbInstructions = sizeof(instructions)/sizeof(instruction);
+    while(index < nbInstructions && instructionRank == -1){
+        if(((hexCode & OPCODE_MASK) >> OPCODE_SHIFT) == instructions[index].opcode){
+            if(instructions[index].opcode == 0){
+                if(((hexCode & FCT_MASK) >> FCT_SHIFT) == instructions[index].function){
+                    instructionRank = index;
+                }
+            }else{
+                instructionRank = index;
+            }
+        }
+        index++;        
+    }
+    /* Retourne la position de l'instruction recherchée dans le tableau des instructions supportées,
+     * Retourne -1 en cas d'échec
+     */
+    return instructionRank;
+}
+
 int validateArgs(int instructionRank, int arguments[], int nbArgs){
     int cnt = 0, field;
     /* Comptage du nombre de champs du registre ayant besoin d'être remplis avec
@@ -207,8 +308,8 @@ int validateArgs(int instructionRank, int arguments[], int nbArgs){
 }
 
 
-unsigned int getBinSegment(int instructionRank, int arguments[]){
-    unsigned int segment = 0;
+int getBinSegment(int instructionRank, int arguments[]){
+    int segment = 0;
     /* L'application d'un tableau de karnaugh pourrait éventuellement factoriser 
         * certaines conditions au détriment de la lisibilité du code .
         */

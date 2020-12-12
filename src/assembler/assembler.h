@@ -1,6 +1,5 @@
 #ifndef ASSEMBLER_H
 #define ASSEMBLER_H
-#include "../memory/memory.h"
 
 #define BUFFER_SIZE 100
 #define MAX_OPCODE_SIZE 4
@@ -52,19 +51,22 @@
 typedef struct instruction instruction;
 struct instruction{
     char name[MAX_OPCODE_SIZE+1];
-    unsigned int type;
-    unsigned int opcode;
-    unsigned int function;
+    int (*fct)(int args[]);
+    int type;
+    int opcode;
+    int function;
 };
+extern const instruction instructions[];
 
-int loadAsmFile(char * inputFileName, memory * mem);
+int asm2hex(char * line, int * hexCode);
 int purifyLine(char * line);
-unsigned int translateAsm(char * line);
 int extractOpcode(char * line, char * opcode);
 int extractArgs(char * line, int indexToBegin, int arguments[]);
+void extractArgsHex(int hexCode, int instructionRank, int arguments[]);
 int str2int(char * str, int beginChar, int endChar);
 int searchInstruction(char * opcode);
+int searchInstructionHex(int hexCode);
 int validateArgs(int instructionRank, int arguments[], int nbArgs);
-unsigned int getBinSegment(int instructionRank, int arguments[]);
+int getBinSegment(int instructionRank, int arguments[]);
 
 #endif

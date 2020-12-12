@@ -41,14 +41,12 @@ void interactiveMode(){
 }
 void simpleMode(char * asmFile){
     memory instructionsMem = NULL;
-    memory progMem = NULL;
     loadProgMem(asmFile, 0, &instructionsMem);
     runInstructions(0, &instructionsMem, &progMem);
     showMemory(&instructionsMem);
 }
 void stepMode(char * asmFile){
     memory instructionsMem = NULL;
-    memory progMem = NULL;
     loadProgMem(asmFile, 1, &instructionsMem);
     runInstructions(1, &instructionsMem, &progMem);
     showMemory(&instructionsMem);

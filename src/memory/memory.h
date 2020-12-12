@@ -10,6 +10,7 @@ struct wordMem{
     wordMem * next;
 };
 typedef wordMem * memory;
+extern memory progMem;
 
 /* Ajoute un mot de données (4 octets) dans la mémoire à l'adresse indiquée */
 void insertWord(unsigned int address, int data, memory * mem);

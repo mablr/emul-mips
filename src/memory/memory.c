@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include "memory.h"
 
+memory progMem = NULL;
+
 void insertWord(unsigned int address, int data, memory * mem){
     int elemStored = 0;
     wordMem *prevElem, *curElem = *mem;
@@ -129,13 +131,20 @@ int isAllocatedWord(unsigned int address, memory * mem){
 }
 
 void showMemory(memory * mem){
-    int index;
+    int index, columnIndex = 0;
     /* Création d'un pointeur local pour ne pas modifier *mem */
     for(index = 0; index < NB_BLOCKS_TO_PRINT*4; index+=4){
         if(isAllocatedWord(index, mem)){
-            printf("@%08x : 0x%08x\n", index, getWord(index, mem));
+            printf("@%08x : 0x%08x", index, getWord(index, mem));
         }else{
-            printf("@%08x : 0x%08x\n", index, 0);
+            printf("@%08x : 0x%08x", index, 0);
+        }
+        columnIndex++;
+        if(columnIndex == 4){
+            printf("\n");
+            columnIndex = 0;
+        }else{
+            printf("\t\t");
         }
     }
 }

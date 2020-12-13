@@ -144,7 +144,7 @@ int or_(int args[]){
 /* Rotate Word Right */
 int rotr(int args[]){
     /* value = GPR[rt] s-1..0 || GPR[rt] 31..s */
-    int value = (getRegister(args[1]) << (31 - getRegister(args[2]))) + (getRegister(args[1]) >> getRegister(args[2]));
+    int value = (getRegister(args[1]) << (32 - args[2])) | (getRegister(args[1]) >> args[2]);
     storeRegister(args[0], value);
     storeRegister(PC, getRegister(PC) + 4);
     return 0;

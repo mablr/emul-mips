@@ -22,7 +22,6 @@ void interactiveMode(){
         instructionIndex = searchInstructionHex(hexCode);
         /* Extraction des arguments */
         extractArgsHex(hexCode, instructionIndex, args);
-        printf("Instruction: %d %s\n", instructionIndex, instructions[instructionIndex].name);
         /* Exécution de l'instruction */
         instructions[instructionIndex].fct(args);
         while(strcmp(userInput, "c\n")){

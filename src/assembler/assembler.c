@@ -17,7 +17,7 @@ const instruction instructions[] = {{"ADD",  &add,  0x149, 0x00, 0x20},
                                     {"DIV",  &div_,  0x141, 0x00, 0x1A},
                                     {"J",    &j,    0x400, 0x02},
                                     {"JAL",  &jal,  0x400, 0x03},
-                                    {"JR",   &jr,   0x103, 0x00, 0x08},
+                                    /*{"JR",   &jr,   0x103, 0x00, 0x08},*/
                                     {"LUI",  &lui,  0x050, 0x0F},
                                     {"LW",   &lw,   0x260, 0x23},
                                     {"MFHI", &mfhi, 0x009, 0x00, 0x10},
@@ -233,6 +233,8 @@ void extractArgsHex(int hexCode, int instructionRank, int arguments[]){
         arguments[0] = (hexCode & RD_MASK) >> RD_SHIFT;
         /* SA */
         arguments[2] = (hexCode & SA_MASK) >> SA_SHIFT;
+        /* Bourrage par des 0 ou des 1 pour obtenir un entier signé 
+        arguments[2] += (hexCode & ((SA_MASK+1)>>1)) ? 0xFFFFFFE0 : 0;*/
     }else if( !(instructions[instructionRank].type ^ (ROTATE_FIELD|RT_FIELD|RD_FIELD|SA_FIELD|FCT_FIELD)) ){
         /* ROTR */
         /* RT */
@@ -241,6 +243,8 @@ void extractArgsHex(int hexCode, int instructionRank, int arguments[]){
         arguments[0] = (hexCode & RD_MASK) >> RD_SHIFT;
         /* SA */
         arguments[2] = (hexCode & SA_MASK) >> SA_SHIFT;
+        /* Bourrage par des 0 ou des 1 pour obtenir un entier signé 
+        arguments[2] += (hexCode & ((SA_MASK+1)>>1)) ? 0xFFFFFFE0 : 0;*/
     }
 }
 
@@ -278,11 +282,19 @@ int searchInstructionHex(int hexCode){
     while(index < nbInstructions && instructionRank == -1){
         if(((hexCode & OPCODE_MASK) >> OPCODE_SHIFT) == instructions[index].opcode){
             if(instructions[index].opcode == 0){
-                if(((hexCode & FCT_MASK) >> FCT_SHIFT) == instructions[index].function){
-                    instructionRank = index;
-                }
+                if(((hexCode & FCT_MASK) >> FCT_SHIFT) == instructions[index].function && hexCode != 0 && instructions[index].type != 0){
+                    if(instructions[index].function == 2 && (hexCode & ROTATE_MASK)>>ROTATE_SHIFT == (instructions[index].type & ROTATE_FIELD)>>7){
+                        instructionRank = index; /* SRL, ROTR */
+                    }else if(instructions[index].function == 0){
+                        instructionRank = index; /* SLL */
+                    }else if(instructions[index].function != 2 && instructions[index].function != 0){
+                        instructionRank = index; /* Instructions de type R restantes */
+                    }
+                }else if(hexCode == 0 && instructions[index].type == 0){
+                    instructionRank = index; /*NOP*/
+                } 
             }else{
-                instructionRank = index;
+                instructionRank = index; /*I/J*/
             }
         }
         index++;        

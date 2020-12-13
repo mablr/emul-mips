@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include "memory.h"
 
-memory progMem = NULL;
 
 void insertWord(unsigned int address, int data, memory * mem){
     int elemStored = 0;

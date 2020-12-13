@@ -7,9 +7,9 @@
 #include "../assembler/assembler.h"
 #include "../stream/stream.h"
 
+memory progMem = NULL;
 
 void interactiveMode(){
-    memory progMem = NULL;
     char * userInput = (char *) malloc(sizeof(char)*BUFFER_SIZE);
     int hexCode, args[3], instructionIndex = -1;
     if(userInput == NULL){
@@ -22,6 +22,7 @@ void interactiveMode(){
         instructionIndex = searchInstructionHex(hexCode);
         /* Extraction des arguments */
         extractArgsHex(hexCode, instructionIndex, args);
+        printf("Instruction: %d %s\n", instructionIndex, instructions[instructionIndex].name);
         /* Exécution de l'instruction */
         instructions[instructionIndex].fct(args);
         while(strcmp(userInput, "c\n")){
@@ -121,6 +122,5 @@ void runInstructions(int step, memory * instructionsMem, memory * progMem){
             }
             
         }
-        storeRegister(PC, getRegister(PC)+4);
     }
 }

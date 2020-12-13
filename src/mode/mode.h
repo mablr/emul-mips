@@ -2,6 +2,7 @@
 #define MODE_H
 #include "../memory/memory.h"
 
+extern memory progMem;
 void interactiveMode();
 void simpleMode(char * asmFile);
 void stepMode(char * asmFile);

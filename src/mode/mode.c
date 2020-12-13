@@ -28,9 +28,11 @@ void interactiveMode(){
             printf("\n\nProcessing instruction:\n %08x\n*** [r]: display registers; [m]: memory; [c]: continue\n", hexCode);
             fgets(userInput, 3, stdin);
             if(!strcmp(userInput, "r\n")){
+                printf("*** Registers state ***\n\n");
                 showRegisters();
             }
             if(!strcmp(userInput, "m\n")){
+                printf("*** Memory state ***\n\n");
                 showMemory(&progMem);
             }
         }
@@ -44,14 +46,18 @@ void simpleMode(char * asmFile){
     memory instructionsMem = NULL;
     loadProgMem(asmFile, 0, &instructionsMem);
     runInstructions(0, &instructionsMem, &progMem);
+    printf("*** Final registers state ***\n\n");
     showRegisters();
+    printf("*** Final memory state ***\n\n");
     showMemory(&progMem);
 }
 void stepMode(char * asmFile){
     memory instructionsMem = NULL;
     loadProgMem(asmFile, 1, &instructionsMem);
     runInstructions(1, &instructionsMem, &progMem);
+    printf("*** Final registers state ***\n\n");
     showRegisters();
+    printf("*** Final memory state ***\n\n");
     showMemory(&progMem);
 }
 
@@ -111,9 +117,11 @@ void runInstructions(int step, memory * instructionsMem, memory * progMem){
                     printf("\n\nProcessing instruction:\n %08x\n*** [r]: display registers; [m]: memory; [c]: continue\n", hexCode);
                     fgets(userInputStep, 3, stdin);
                     if(!strcmp(userInputStep, "r\n")){
+                        printf("*** Registers state ***\n\n");
                         showRegisters();
                     }
                     if(!strcmp(userInputStep, "m\n")){
+                        printf("*** Memory state ***\n\n");
                         showMemory(progMem);
                     }
                 }

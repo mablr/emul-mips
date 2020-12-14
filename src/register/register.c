@@ -23,13 +23,14 @@ int getRegister(int index){
 void showRegisters(void){
     int i, columnIndex = 0;
     for(i = 0; i < GENERAL_REGISTERS; i++){
-        printf("$%02d : %d", i, registers[i]);
+        /* Affichage avec une largeur fixe du contenu de chaque registre */
+        printf("$%02d : %-*d", i, 12, registers[i]);
         columnIndex++;
         if(columnIndex == 4){
             printf("\n");
             columnIndex = 0;
         }else{
-            printf("\t\t");
+            printf("\t");
         }
     }
     printf("\nHI : %d \nLO : %d \nPC : %d\n\n", registers[33], registers[34], registers[32]);

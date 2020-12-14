@@ -24,13 +24,16 @@ void interactiveMode(){
         extractArgsHex(hexCode, instructionIndex, args);
         /* Exécution de l'instruction */
         instructions[instructionIndex].fct(args);
+        /* Interface utilisateur pour afficher l'état de la mémoire et des registres */
         while(strcmp(userInput, "c\n")){
             printf("\n\nProcessing instruction:\n %08x\n*** [r]: display registers; [m]: memory; [c]: continue\n", hexCode);
             fgets(userInput, 3, stdin);
+            /* Si entrée = r --> Afficher l'état des registres */
             if(!strcmp(userInput, "r\n")){
                 printf("*** Registers state ***\n\n");
                 showRegisters();
             }
+            /* Si entrée = m --> Afficher l'état de la mémoire */
             if(!strcmp(userInput, "m\n")){
                 printf("*** Memory state ***\n\n");
                 showMemory(&progMem);
@@ -41,6 +44,9 @@ void interactiveMode(){
         printf("\n\n$ ");
     }
     printf("\nFin d'exécution.\n");
+    /* Libération mémoire */
+    free(userInput);
+    freeMem(&progMem);
 }
 void simpleMode(char * asmFile){
     memory instructionsMem = NULL;
@@ -50,6 +56,9 @@ void simpleMode(char * asmFile){
     showRegisters();
     printf("*** Final memory state ***\n\n");
     showMemory(&progMem);
+    /* Libération mémoire */
+    freeMem(&instructionsMem);
+    freeMem(&progMem);
 }
 void stepMode(char * asmFile){
     memory instructionsMem = NULL;
@@ -59,6 +68,9 @@ void stepMode(char * asmFile){
     showRegisters();
     printf("*** Final memory state ***\n\n");
     showMemory(&progMem);
+    /* Libération mémoire */
+    freeMem(&instructionsMem);
+    freeMem(&progMem);
 }
 
 void loadProgMem(char * asmFile, int step, memory * mem){
@@ -78,22 +90,30 @@ void loadProgMem(char * asmFile, int step, memory * mem){
     while(fgets(lineBuffer, BUFFER_SIZE, inputFile) != NULL){
         if(asm2hex(lineBuffer, &hexCode)){
             if(stepActivated){
+                /* Tant que l'entrée est différente de [enter] (continuer) 
+                 * ou de s passer l'étape --> afficher le menu et attendre
+                 * une entrée de l'utilisateur
+                 */
                 while(strcmp(userInputStep, "\n") && strcmp(userInputStep, "s\n")){
                     printf("\n\nAssembling line %d:\n%s\nHexadecimal instruction code:\n%08x\n*** [entry]: go to next instruction; [s] skip to execution\n", lineIndex, lineBuffer, hexCode);
                     fgets(userInputStep, 3, stdin);
                     if(!strcmp(userInputStep, "s\n")){
+                        /* Désactivation du mode pas à pas pour la lecture et le stockage de instructions */
                         stepActivated = 0;
                     }
                 }
                 userInputStep[0] = '\0';
             }
+            /* Stockage en mémoire de l'instruction*/
             insertWord(memAddress, hexCode, mem);
             lineIndex++;
             memAddress += 4;
         }
     }
-    
+    /* Fermeture du fichier */
     closeFile(asmFile, inputFile);
+    /* Libération mémoire */
+    free(userInputStep);
     free(lineBuffer);
 }
 
@@ -104,11 +124,14 @@ void runInstructions(int step, memory * instructionsMem, memory * progMem){
         exit(EXIT_FAILURE);
     while(isAllocatedWord(getRegister(PC), instructionsMem)){
         hexCode = getWord(getRegister(PC), instructionsMem);
+        /* Si l'instruction est prise en charge par l'émulateur */
         if((instructionIndex = searchInstructionHex(hexCode)) != -1){
             /* Extraction des arguments */
             extractArgsHex(hexCode, instructionIndex, args);
             /* Exécution de l'instruction */
             if(instructions[instructionIndex].fct(args)){
+                /* Si la fonction appelée retourne 1 --> exception */
+                /* Fonctionnalité pas encore implémentée */
                 fprintf(stderr,"@%08x Exception détectée !\n", getRegister(PC));
             }
             /* Traitement du "pas à pas" */
@@ -130,4 +153,6 @@ void runInstructions(int step, memory * instructionsMem, memory * progMem){
             
         }
     }
+    /* Libération mémoire */
+    free(userInputStep);
 }

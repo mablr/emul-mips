@@ -1,52 +1,101 @@
 ---
-title: "CS351 Projet Émulateur MIPS : Étape 2"
-subject: "Réflexion sur les modules"
+title: "CS351 Projet Émulateur MIPS"
+subject: "Bilan final"
 author: ***REMOVED*** ***REMOVED*** & ***REMOVED*** ***REMOVED***
-date: "20/11/2020"
+date: "14/12/2020"
+geometry: margin=2.5cm
 papersize: a4
+titlepage: true,
+titlepage-text-color: "FFFFFF"
+titlepage-rule-color: "FFFFFF"
+titlepage-rule-height: 3
+titlepage-background: "bg.pdf"
 ...
-# CS351 Projet Émulateur MIPS
+# Introduction
+Dans le cadre de projet de programmation C l'objectif est de réaliser un émulateur MIPS capable d'assembler et d'exécuter des instructions en assembleur. Il devra comporter 3 modes : intératif, pas-à-pas et non-intéractif. Nous avons à notre disposition de la documentation décrivant le fonctionnement du processeur MIPS et la structure de ces instructions. Le but étant d'avoir un émulateur ayant un comportement le plus proche de la réalité possible. 
 
-## Réflexion sur le module de gestion de la mémoire
+# Choix techniques
 
-Tout d'abord, MIPS est une architecture big endian. C'est-à-dire que les bits de poids forts sont stockés aux adresses les plus basses. Nous avons déterminé qu'il était possible d'utiliser un tableau de int ou de char. Cependant, au vu de la structure de la mémoire décrite dans l'annexe du sujet, nous avons choisi d'utiliser un tableau de char. De cette manière, il sera possible d'adresser sur 32 bits chaque emplacement mémoire (octet), les adresses des mots iront donc de 4 en 4. C'est ainsi la structure la plus proche de la réalité
+Suite au rendu de l'étape du 2 du projet nous avons finalement modifié quelques-uns de nos choix techniques. Nous allons donc vous présenter rapidement la structure du logiciel module par module.
 
-Ensuite, pour gérer cette mémoire, nous avons décidé d'utiliser une liste chaînée. Son fonctionnement nous semble très adapté à la tâche demandée, car assez léger et flexible. Et pour cause allouer 4 Go de mémoire avec un tableau de 2^32 int est inimaginable, inefficace, et contre-productif.
+## Module mémoire
 
-Il sera facile de réaliser ce système en s'insipirant des listes chaînées réalisés en TP avant le projet. En outre, nous aurons besoin d'un champ pour l'adresse et d'un champ pour les données.
+Nous avons retenu la plupart des concepts formulés lors de l'étape précédente, à savoir une liste chaînée triée par adresses. Un choix judicieux puisque que la mémoire physique est allouée dynamiquement en fonction de l'utilisation.
 
-Lors d'une allocation de mémoire (insertion dans la liste chainée), la liste gardera chacun de ses éléments (adresse + octet de données) triés selon leur addresse, ce qui permettra de réduire la complexité pour lire ou libérer la mémoire ensuite.
+Néanmoins nous avons dû nous résoudre à simplifier l'implémentation de la gestion mémoire en stockant mot à mot et non octet par octet. Le structure de la liste chaînée a été renommée de `byteMem` à `wordMem`, le type du champs `.data` passé de `char` à `int` et les fonctions inutiles supprimées. La complexité de notre code est ainsi bien moindre mais en l'état la mémoire n'est plus addressable directement par octet.
 
-Voici la structure que nous envisageons d'utiliser pour la mémoire :
-```c
-typedef struct byteMem byteMem;
-struct byteMem{
-    unsigned int address;
-    unsigned char data;
-    byteMem * nextByteMem;
-};
-typedef byteMem * memory;
+## Module registre
+
+Nous avons implémenté ce module de la même manière que nous l'avions imaginé, avec un tableau de 35 `int`. De l'index 0 à 31, il y a les registres classiques, et de 32 à 34 pour les registres spéciaux (PC, HI et LO).
+
+Le tableau contenant les registres est modifié et lu via les fonctions `storeRegister` et `getRegister` pour éviter les erreurs les opérations interdites (ie: modifier la valeur du registre $0).
+
+## Module stream
+
+Ce module contient simplement deux fonctions qui permettent d'ouvrir et de fermer de manière sécurisée des fichiers.
+
+## Module main
+
+Il contient simplement le `main.c`.
+
+## Module assembleur (codage/décodage)
+
+Premier module à avoir été codé dans le cadre du projet. Nous avons réalisé une refonte de celui-ci pour qui puisse offrir l'ensemble des fonctions permettant la traduction d'instructions sous forme de chaînes de caractères en hexadécimal, mais également l'extraction de l'opcode et des instructions.
+
+Nous avons défini un tableau, de structures contenant toutes les informations sur chaque fonction implémentée. Voici la structure de base :
 
 ```
+typedef struct instruction instruction;
+struct instruction{
+    char name[MAX_OPCODE_SIZE+1];
+    int (*fct)(int args[]);
+    int type;
+    int opcode;
+    int function;
+};
+```
+Cette structure comporte un pointeur de fonction permettant de réaliser l'appel de la fonction associée à l'instruction à traiter de manière générique.
 
-Nous écrirons dans ce module les fonctions suivantes :
+Le champ type est également très intéressant car il permet d'identifier proprement chaque instruction et les arguments qu'il faut lui fournir. Voici quelques exemples :
 
-- `insertByteMem` et `insertWord` pour stocker respectivement un octet et un mot (4 octets) en mémoire à une adresse donnée.
-- `getByteMem` et `getWord` pour récupérer respectivement la valeur de l'octet et du mot en mémoire à une adresse donnée.
-- `deleteByteMem` pour libérer l'emplacement mémoire à une adresse donnée.
-- `isAllocatedByteMem` pour savoir si l'emplacement mémoire à l'adresse donnée est alloué.
+|\color{red}**Opcode**| INDEX | BASE | RS | ROTATE | RT | OFFSET | IMM | RD | SA | HINT | FCT |\color{blue}**Type**|
+| ------------------- | ----- | ---- | -- | ------ | -- | ------ | --- | -- | -- | ---- | --- | ------------------ |
+| **ADDI**            | 0     | 0    | 0  | 0      | 0  | 1      | 0   | 1  | 0  | 0    | 1   | **0x149**          |
+| **BGTZ**            | 0     | 0    | 1  | 0      | 0  | 1      | 0   | 0  | 0  | 0    | 0   | **0x120**          |
+| **ROTR**            | 0     | 0    | 0  | 1      | 1  | 0      | 0   | 1  | 1  | 0    | 1   | **0x0CD**          |
 
-## Réflexion sur le module de gestion des registres
 
-Concernant la gestion des registres, nous avons opté pour une solution plus simple, il nous suffira de créer un tableau d'entiers.
+## Module fonction
 
-Cependant, il ne faut pas oublier que certains registres sont reservés ou spéciaux, par exemple, le registre $29 contient le stack pointer et le registre $0 qui est toujours nul. Ainsi, la fonction ayant pour but de charger des valeurs dans les registres devra être assez robuste pour ne pas réaliser d'opérations interdites ou engendrer des erreurs.
+Ce module est composé des fonctions réalisent les actions respectives (écritures des régistres/mémoire) de chaque instruction MIPS prise en charge par l'émulateur. Elles sont toutes appelées par un pointeur de fonction définit dans le module assembleur. Cette partie du code est assez simple en effet nous avons déporté toute la complexité dans les autres modules, notamment avec le champ `type` dans le tableau de structures `instruction`.
 
-Les registres généraux de $0 à $31, seront stockés de manière transparente dans le tableau des registres du rang 0 au rang 31.
+## Module mode
 
-Les registres pour le compteur programme PC et les registres HI et LO seront stockés respectivement aux rangs 33, 34 et 35.
+Ce module est la clef de voûte de notre programme, en effet il gère les trois différents modes d'exécution de l'emulateur. Les fonctions qui le constituent, utilisent les modules précédemment cités. Il implémente en quelque sorte la pipeline de processeur MIPS en appelant successivement des fonctions pour lire, encoder, stocker, décoder, et exécuter les instructions que l'on fournit.
 
-Le module sera donc composé de seulement deux fonctions :
 
-- `storeRegister` pour stocker une valeur dans un registre.
-- `getRegister` pour récupérer la valeur d'un registre.
+# Progression et répartition du travail
+
+## Étape 1
+
+Nous avons réalisé la première partie du projet (module assembleur + tests) à quatre mains grâce à un outil de écriture de code partagé et git.
+
+## Étape 2
+
+Nous avons ensuite défini ensemble un découpage en modules pour pouvoir créer les prototypes demandés et nous répartir le travail. Avant même de coder nous avons défini précisemment tout ce que nous allions devoir faire, ce qui nous a permis de gagner du temps en mettant à profit les travaux réalisés dans les précédents TP.
+
+## Étape 3
+C'est à partir de cette étape que nous avons commencé à travailler chacun de notre côté.
+
+- ***REMOVED*** : Modules Registre, Mémoire, et Modes (+ refonte Assembleur)
+- ***REMOVED*** : Module fonction, Écriture de tests supplémentaires pour le débogage
+
+# Conclusion
+
+Lors de ce projet nous avons eu l'occasion de mettre en application l'ensemble du spectre de nos connaissances en programmation C et certaines notions d'électronique numérique. Cette réalisation à l'envergure bien plus importante que ce nous avions pu faire auparavant, nous a permis de mettre en œuvre de la programmation modulaire afin de pouvoir mieux structures notre code et partager la charge de travail convenablement. Nous avons réussi à terminer le travail attendu avec en plus
+quelques fonctions supplémentaires qui pourraient être utilisées dans le implémentation des étiquettes.
+
+# Addendum
+## Description des éléments du rendu final (archive)
+- L'ensemble du code source est contenu dans le dossier `src`
+- Les tests (codes assembleur) `in?.txt` et des résultats `out?.txt` sont dans le dossier `test`

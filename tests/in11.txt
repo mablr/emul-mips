@@ -1,0 +1,8 @@
+ADDI $1, $0, 8
+JAL 6
+ADDI $1, $1, -1
+ADDI $1, $1, -1
+ADDI $1, $1, -1
+ADDI $1, $1, -1
+BGTZ $1, -16
+ADDI $1, $1, 101 # si c'est lol, c'est gagné !

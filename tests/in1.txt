@@ -8,9 +8,3 @@ SLL $13,$8,32 # décalage à gauche de 32
 SLL $14,$8,39 # décalage à gauche de 39 <=> décalage à gauche de 7
 SRL $12,$12,5 # décalage à droite de 5
 SRL $15,$8,1 # décalage à droite de 1
-
-# *** Final register states: *** 
-# ...
-# $08: 1         $09: 16        $10: 1         $11: 256       
-# $12: 2        $13: 1         $14: 128       $15: 0    
-# ...

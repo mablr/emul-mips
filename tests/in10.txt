@@ -1,0 +1,6 @@
+ADDI $1, $0, 1
+J 5
+ADD $1, $1, $1 #Instruction non exécutée
+ADD $1, $1, $1 #Instruction non exécutée
+ADD $1, $1, $1 #Instruction non exécutée
+ADD $1, $1, $1 #Jump pointe ici

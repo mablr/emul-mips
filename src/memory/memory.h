@@ -20,6 +20,9 @@ int getWord(unsigned int address, memory * mem);
 /* Libère l'emplacement mémoire à l'adresse indiquée */
 void deleteWord(unsigned int address, memory * mem);
 
+/* Vide la mémoire */
+void freeMem(memory * mem);
+
 /* Vérifie si un emplacement mémoire est alloué */
 int isAllocatedWord(unsigned int address, memory * mem);
 

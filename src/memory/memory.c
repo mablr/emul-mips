@@ -113,6 +113,19 @@ void deleteWord(unsigned int address, memory * mem){
     }
 }
 
+void freeMem(memory * mem){
+    wordMem *prevElem, *curElem = *mem;
+    /* Avance jusqu'à la fin de la liste 
+     * chaînée pour supprimer tout les éléments
+     */ 
+    while(curElem != NULL){
+        prevElem = curElem;
+        curElem = curElem->next;
+        free(prevElem);
+    }
+}
+
+
 int isAllocatedWord(unsigned int address, memory * mem){
     int byteFound = 0;
     wordMem *elem = *mem;
